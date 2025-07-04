@@ -1,3 +1,3 @@
 public interface Entity {
-    public int[] coordinates = new int[2];
+    int[] coordinates = new int[2];
 }
