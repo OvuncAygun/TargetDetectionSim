@@ -7,6 +7,5 @@ public class BoardTile {
     public BoardTile(int x, int y) {
         this.tileCoordinates[0] = x;
         this.tileCoordinates[1] = y;
-
     }
 }
