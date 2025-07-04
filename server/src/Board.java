@@ -1,6 +1,3 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-
 public class Board {
     public int[] boardSize = new int[2];
     public BoardTile[][] boardTiles;

@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class BoardTile {
     public int[] tileCoordinates = new int[2];
