@@ -15,15 +15,18 @@ public class ServerThread implements Runnable {
         BufferedReader in;
         try {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            while (true) {
-                System.out.println(clientSocket);
-                System.out.println(in.readLine());
+            String message = "";
+            while (message != null) {
+                message = in.readLine();
+                System.out.println(message + " from " + clientSocket);
+                Thread.sleep(1000);
             }
         }
         catch (IOException e) {
             System.err.println(e.getMessage());
-        }
-        finally {
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
             if (clientSocket != null) {
                 try {
                     clientSocket.close();
