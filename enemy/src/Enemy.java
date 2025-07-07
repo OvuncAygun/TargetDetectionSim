@@ -1,6 +1,6 @@
 import java.io.IOException;
 
-public interface Entity {
+public interface Enemy {
     int[] coordinates = new int[2];
 
     public void move() throws IOException;

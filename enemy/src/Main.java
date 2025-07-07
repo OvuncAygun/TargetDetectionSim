@@ -4,20 +4,22 @@ import java.net.*;
 public class Main {
     public static void main(String[] args) {
         Socket socket = null;
+        Enemy enemy;
 
         try {
             socket = new Socket("localhost", 1111);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            int i = 1;
-            while (i <= 10) {
-                out.println(i);
-                System.out.println(i + " to " + socket);
-                i++;
-//a
+            DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+            enemy = new Enemy1(0, 0, outputStream);
+
+            while (true) {
+                enemy.move();
+                Thread.sleep(1000);
             }
         }
         catch (IOException e) {
             System.err.println(e.getMessage());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             if (socket != null) {
                 try {
