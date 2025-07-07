@@ -3,8 +3,8 @@ import java.util.Random;
 
 public class Enemy1 implements Enemy {
     private int[] coordinates = new int[2];
-    private DataOutputStream outputStream;
-    private Random random = new Random(System.currentTimeMillis());
+    private final DataOutputStream outputStream;
+    private final Random random = new Random(System.currentTimeMillis());
 
     public Enemy1(int x, int y, DataOutputStream outputStream) throws IOException {
         this.coordinates[0] = x;

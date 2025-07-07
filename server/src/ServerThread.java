@@ -16,13 +16,10 @@ public class ServerThread implements Runnable {
         try {
             inputStream = new DataInputStream(clientSocket.getInputStream());
             String type = inputStream.readUTF();
-            switch (type) {
-                case "enemy1":
-                    entity = new Enemy(inputStream);
-                    break;
-                default:
-                    throw new UnknownTypeException(null, "Unknown type while creating object");
-            }
+            entity = switch (type) {
+                case "enemy1" -> new Enemy(inputStream);
+                default -> throw new UnknownTypeException(null, "Unknown type while creating object");
+            };
 
             while (true) {
                 String operation = inputStream.readUTF();
@@ -34,7 +31,7 @@ public class ServerThread implements Runnable {
             }
         }
         catch (IOException e) {
-            System.err.println(e.getCause());
+            System.err.println(e.getMessage());
         } finally {
             if (clientSocket != null) {
                 try {

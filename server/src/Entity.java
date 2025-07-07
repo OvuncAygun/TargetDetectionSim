@@ -3,5 +3,5 @@ import java.io.IOException;
 public interface Entity {
     int[] coordinates = new int[2];
 
-    public void move() throws IOException;
+    void move() throws IOException;
 }
