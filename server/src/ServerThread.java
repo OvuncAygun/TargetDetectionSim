@@ -11,13 +11,13 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run() {
-        DataInputStream inputStream;
         Entity entity;
         try {
-            inputStream = new DataInputStream(clientSocket.getInputStream());
+            DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream());
+            DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
             String type = inputStream.readUTF();
             entity = switch (type) {
-                case "enemy1" -> new Enemy(inputStream);
+                case "normalEnemy" -> new Enemy(inputStream, outputStream);
                 default -> throw new UnknownTypeException(null, "Unknown type while creating object");
             };
 
@@ -26,7 +26,12 @@ public class ServerThread implements Runnable {
                 switch (operation) {
                     case "MOVE":
                         entity.move();
-
+                        break;
+                    case "DISCOVER":
+                        int size = inputStream.readInt();
+                        entity.discover(size);
+                    default:
+                        break;
                 }
             }
         }

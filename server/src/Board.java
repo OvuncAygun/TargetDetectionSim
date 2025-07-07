@@ -1,14 +1,15 @@
 public class Board {
-    public int[] boardSize = new int[2];
+    public int xSize;
+    public int ySize;
     public BoardTile[][] boardTiles;
 
-    public Board(int boardSizeX, int boardSizeY) {
-        this.boardSize[0] = boardSizeX;
-        this.boardSize[1] = boardSizeY;
-        boardTiles = new BoardTile[boardSize[0]][boardSize[1]];
-        for(int i = 0; i < boardSize[0]; i++) {
-            for(int j = 0; j < boardSize[1]; j++) {
-                boardTiles[i][j] = new BoardTile(i, j);
+    public Board(int xSize, int ySize) {
+        this.xSize = xSize;
+        this.ySize = ySize;
+        boardTiles = new BoardTile[xSize][ySize];
+        for(int i = 0; i < xSize; i++) {
+            for(int j = 0; j < ySize; j++) {
+                boardTiles[i][j] = new BoardTile(i, j, true);
             }
         }
     }

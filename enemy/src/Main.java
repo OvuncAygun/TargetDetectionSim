@@ -8,8 +8,9 @@ public class Main {
 
         try {
             socket = new Socket("localhost", 1111);
+            DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
-            enemy = new Enemy1(0, 0, outputStream);
+            enemy = new NormalEnemy(inputStream, outputStream);
 
             while (true) {
                 enemy.move();
