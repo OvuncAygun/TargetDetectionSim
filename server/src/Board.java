@@ -13,4 +13,8 @@ public class Board {
             }
         }
     }
+
+    public BoardTile getBoardTile(int x, int y) {
+        return boardTiles[x][y];
+    }
 }

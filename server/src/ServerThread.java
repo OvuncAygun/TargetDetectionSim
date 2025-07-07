@@ -4,9 +4,11 @@ import java.net.*;
 
 public class ServerThread implements Runnable {
     private final Socket clientSocket;
+    private final Board board;
 
-    public ServerThread(Socket clientSocket) {
+    public ServerThread(Socket clientSocket, Board board) {
         this.clientSocket = clientSocket;
+        this.board = board;
     }
 
     @Override
@@ -17,7 +19,7 @@ public class ServerThread implements Runnable {
             DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
             String type = inputStream.readUTF();
             entity = switch (type) {
-                case "normalEnemy" -> new Enemy(inputStream, outputStream);
+                case "normalEnemy" -> new Enemy(inputStream, outputStream, board);
                 default -> throw new UnknownTypeException(null, "Unknown type while creating object");
             };
 

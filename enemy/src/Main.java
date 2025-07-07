@@ -5,12 +5,13 @@ public class Main {
     public static void main(String[] args) {
         Socket socket = null;
         Enemy enemy;
+        Board board = new Board(100, 100);
 
         try {
             socket = new Socket("localhost", 1111);
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
-            enemy = new NormalEnemy(inputStream, outputStream);
+            enemy = new NormalEnemy(inputStream, outputStream, board);
 
             while (true) {
                 enemy.move();
