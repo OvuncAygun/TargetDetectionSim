@@ -8,7 +8,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         Group root = new Group();
         ObservableList<Node> rootList = root.getChildren();
         Scene scene = new Scene(root, 1000, 1000);
@@ -16,18 +16,8 @@ public class Main extends Application {
         primaryStage.setScene(scene);
 
         for(int i = 0; i <= 50; i++) {
-            Line line = new Line();
-            line.setStartX(0);
-            line.setEndX(1000);
-            line.setStartY(20*i);
-            line.setEndY(20*i);
-            rootList.add(line);
-            line = new Line();
-            line.setStartX(20*i);
-            line.setEndX(20*i);
-            line.setStartY(0);
-            line.setEndY(1000);
-            rootList.add(line);
+            rootList.add(new Line(0, 20*i, 1000, 20*i));
+            rootList.add(new Line(20*i, 0, 20*i, 1000));
         }
         primaryStage.show();
     }
