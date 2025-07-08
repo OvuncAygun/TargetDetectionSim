@@ -1,34 +1,36 @@
 import java.io.*;
 import java.net.*;
 
-public class Main {
-    public static void main(String[] args) {
-        Board board = new Board(100, 100);
+public class Server implements Runnable{
+    private final Board board = new Board(50, 50);
+    private final GUI gui;
 
+    public Server(GUI gui) {
+        this.gui = gui;
+    }
+
+    @Override
+    public void run() {
         ServerSocket server = null;
         try {
             server = new ServerSocket(1111);
             while (true) {
                 Socket client = server.accept();
 
-                ServerThread clientHandler = new ServerThread(client, board);
+                ServerThread clientHandler = new ServerThread(client, board, gui);
 
                 new Thread(clientHandler).start();
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.err.println(e.getMessage());
-        }
-        finally {
+        } finally {
             if (server != null) {
                 try {
                     server.close();
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     System.err.println(e.getMessage());
                 }
             }
         }
-
     }
 }

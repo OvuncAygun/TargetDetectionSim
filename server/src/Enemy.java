@@ -4,19 +4,23 @@ import java.io.*;
 public class Enemy implements Entity{
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
+    private final Board board;
+    private final GUI gui;
+    private final int guiID;
     public String name;
     private int x;
     private int y;
-    public Board board;
 
-    public Enemy(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
+    public Enemy(DataInputStream inputStream, DataOutputStream outputStream, Board board, GUI gui) throws IOException {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.board = board;
+        this.gui = gui;
         this.name = inputStream.readUTF();
         this.x = inputStream.readInt();
         this.y = inputStream.readInt();
         outputStream.writeBoolean(true);
+        this.guiID = gui.addEnemy(x, y);
     }
 
     public void move() throws IOException {
@@ -27,9 +31,13 @@ public class Enemy implements Entity{
     public void discover() throws IOException {
         int size = inputStream.readInt();
         for(int i = size; i >= -size; i--){
-            for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
-                BoardTile boardTile = board.getBoardTile(x + i,y + j);
-                outputStream.writeBoolean(boardTile.traversable);
+            if(x + i >= 0 && x + i < board.xSize) {
+                for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
+                    if(y + j >= 0 && y + j < board.ySize) {
+                        BoardTile boardTile = board.getBoardTile(x + i,y + j);
+                        outputStream.writeBoolean(boardTile.traversable);
+                    }
+                }
             }
         }
     }

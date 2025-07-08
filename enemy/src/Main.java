@@ -5,7 +5,7 @@ public class Main {
     public static void main(String[] args) {
         Socket socket = null;
         Enemy enemy;
-        Board board = new Board(100, 100);
+        Board board = new Board(50, 50);
 
         try {
             socket = new Socket("localhost", 1111);

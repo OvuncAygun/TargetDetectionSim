@@ -5,10 +5,12 @@ import java.net.*;
 public class ServerThread implements Runnable {
     private final Socket clientSocket;
     private final Board board;
+    private final GUI gui;
 
-    public ServerThread(Socket clientSocket, Board board) {
+    public ServerThread(Socket clientSocket, Board board, GUI gui) {
         this.clientSocket = clientSocket;
         this.board = board;
+        this.gui = gui;
     }
 
     @Override
@@ -19,7 +21,7 @@ public class ServerThread implements Runnable {
             DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
             String type = inputStream.readUTF();
             entity = switch (type) {
-                case "normalEnemy" -> new Enemy(inputStream, outputStream, board);
+                case "normalEnemy" -> new Enemy(inputStream, outputStream, board, gui);
                 default -> throw new IllegalArgumentException("Undefined type received for entity creation");
             };
 

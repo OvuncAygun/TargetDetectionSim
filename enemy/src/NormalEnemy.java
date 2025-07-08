@@ -20,8 +20,8 @@ public class NormalEnemy implements Enemy {
         outputStream.writeUTF("normalEnemy");
         outputStream.writeUTF("enemyName");
         do {
-            x = random.nextInt(0, 100);
-            y = random.nextInt(0, 100);
+            x = random.nextInt(0, board.xSize);
+            y = random.nextInt(0, board.ySize);
             outputStream.writeInt(x);
             outputStream.writeInt(y);
         }
@@ -52,9 +52,13 @@ public class NormalEnemy implements Enemy {
         outputStream.writeUTF("DISCOVER");
         outputStream.writeInt(size);
         for(int i = size; i >= -size; i--){
-            for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
-                boolean traversable = inputStream.readBoolean();
-                board.discoverBoardTile(x + i, y + j, traversable);
+            if(x + i >= 0 && x + i < board.xSize) {
+                for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
+                    if(y + j >= 0 && y + j < board.ySize) {
+                        boolean traversable = inputStream.readBoolean();
+                        board.discoverBoardTile(x + i, y + j, traversable);
+                    }
+                }
             }
         }
     }
