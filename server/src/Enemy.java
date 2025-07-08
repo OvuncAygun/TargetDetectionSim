@@ -20,14 +20,14 @@ public class Enemy implements Entity{
     }
 
     public void move() throws IOException {
-        int x = inputStream.readInt();
-        int y = inputStream.readInt();
-        System.out.printf("Moved [%d, %d]\n", x, y);
+        x = inputStream.readInt();
+        y = inputStream.readInt();
     }
 
-    public void discover(int size) throws IOException {
+    public void discover() throws IOException {
+        int size = inputStream.readInt();
         for(int i = size; i >= -size; i--){
-            for(int j = size - Math.abs(i); j >= Math.abs(i) - size; i--){
+            for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
                 BoardTile boardTile = board.getBoardTile(x + i,y + j);
                 outputStream.writeBoolean(boardTile.traversable);
             }

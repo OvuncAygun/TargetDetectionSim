@@ -6,4 +6,6 @@ public interface Enemy {
     void move() throws IOException;
 
     void discover(int size) throws IOException;
+
+    boolean findPath(int x, int y);
 }

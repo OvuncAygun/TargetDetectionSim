@@ -20,7 +20,7 @@ public class ServerThread implements Runnable {
             String type = inputStream.readUTF();
             entity = switch (type) {
                 case "normalEnemy" -> new Enemy(inputStream, outputStream, board);
-                default -> throw new UnknownTypeException(null, "Unknown type while creating object");
+                default -> throw new IllegalArgumentException("Undefined type received for entity creation");
             };
 
             while (true) {
@@ -30,16 +30,17 @@ public class ServerThread implements Runnable {
                         entity.move();
                         break;
                     case "DISCOVER":
-                        int size = inputStream.readInt();
-                        entity.discover(size);
-                    default:
+                        entity.discover();
                         break;
+                    default:
+                        throw new IllegalArgumentException("Undefined command received");
                 }
             }
         }
-        catch (IOException e) {
+        catch (IOException | IllegalArgumentException e) {
             System.err.println(e.getMessage());
-        } finally {
+        }
+        finally {
             if (clientSocket != null) {
                 try {
                     clientSocket.close();

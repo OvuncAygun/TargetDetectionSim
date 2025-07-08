@@ -5,5 +5,5 @@ public interface Entity {
 
     void move() throws IOException;
 
-    void discover(int size) throws IOException;
+    void discover() throws IOException;
 }
