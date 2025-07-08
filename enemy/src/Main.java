@@ -4,17 +4,19 @@ import java.net.*;
 public class Main {
     public static void main(String[] args) {
         Socket socket = null;
+        Enemy enemy;
+        Board board = new Board(100, 100);
 
         try {
             socket = new Socket("localhost", 1111);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            int i = 1;
-            while (i <= 10) {
-                out.println(i);
-                System.out.println(i + " to " + socket);
-                i++;
-//a
+            DataInputStream inputStream = new DataInputStream(socket.getInputStream());
+            DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+            enemy = new NormalEnemy(inputStream, outputStream, board);
+
+            for(int i = 0; i < 100; i++){
+                enemy.move();
             }
+
         }
         catch (IOException e) {
             System.err.println(e.getMessage());
