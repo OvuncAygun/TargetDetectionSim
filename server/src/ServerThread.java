@@ -40,7 +40,13 @@ public class ServerThread implements Runnable {
             }
         }
         catch (IOException | IllegalArgumentException e) {
-            System.err.println(e.getMessage());
+            if(e instanceof EOFException) {
+                System.out.println("Client Disconnected.");
+            }
+            else {
+                System.err.println(e.getMessage());
+            }
+
         }
         finally {
             if (clientSocket != null) {

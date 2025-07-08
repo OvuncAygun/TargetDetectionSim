@@ -13,13 +13,17 @@ public class Main {
             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
             enemy = new NormalEnemy(inputStream, outputStream, board);
 
-            for(int i = 0; i < 100; i++){
+            while (true) {
                 enemy.move();
+                Thread.sleep(200);
             }
+
 
         }
         catch (IOException e) {
             System.err.println(e.getMessage());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             if (socket != null) {
                 try {

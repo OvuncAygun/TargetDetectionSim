@@ -6,7 +6,7 @@ public class Enemy implements Entity{
     private final DataOutputStream outputStream;
     private final Board board;
     private final GUI gui;
-    private final int guiID;
+    private final String guiID;
     public String name;
     private int x;
     private int y;
@@ -26,6 +26,7 @@ public class Enemy implements Entity{
     public void move() throws IOException {
         x = inputStream.readInt();
         y = inputStream.readInt();
+        gui.moveEntity(guiID, x, y);
     }
 
     public void discover() throws IOException {

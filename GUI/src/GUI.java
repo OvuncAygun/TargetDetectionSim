@@ -1,16 +1,21 @@
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
 
 public class GUI extends Application {
-    private final ArrayList<int[]> enemyLocations = new ArrayList<>();
+    private Group root;
     private ObservableList<Node> rootList;
+    private Scene scene;
+    private int idCounter = 0;
 
     public static void main(String[] args) {
         launch(args);
@@ -21,22 +26,41 @@ public class GUI extends Application {
         Server clientHandler = new Server(this);
         new Thread(clientHandler).start();
 
-        Group root = new Group();
+        root = new Group();
         this.rootList = root.getChildren();
-        Scene scene = new Scene(root, 1000, 1000);
+        scene = new Scene(root, 1000, 1000);
+        scene.setFill(Color.WHITESMOKE);
         primaryStage.setTitle("Target Detection Simulation");
         primaryStage.setScene(scene);
 
+        Line line;
         for (int i = 0; i <= 50; i++) {
-            rootList.add(new Line(0, 20 * i, 1000, 20 * i));
-            rootList.add(new Line(20 * i, 0, 20 * i, 1000));
+            line = new Line(0, i * 20, 1000, i * 20);
+            line.setStroke(Color.LIGHTSLATEGRAY);
+            rootList.add(line);
+            line = new Line(i * 20, 0, i * 20, 1000);
+            line.setStroke(Color.LIGHTSLATEGRAY);
+            rootList.add(line);
         }
         primaryStage.show();
     }
 
-    public int addEnemy(int x, int y) {
-        enemyLocations.add(new int[] {x, y});
-        int enemyID = enemyLocations.size() - 1;
-        return enemyID;
+    public String addEnemy(int x, int y) {
+        Circle enemy = new Circle(x * 20 + 10, y * 20 + 10,8);
+        String id = "enemy-" + idCounter;
+        idCounter++;
+        enemy.setId(id);
+        enemy.setFill(Color.RED);
+        Platform.runLater(() -> {
+            rootList.add(enemy);
+        });
+        return id;
+    }
+    public void moveEntity(String entityID, int x, int y) {
+        Platform.runLater(() -> {
+            Circle entity = (Circle) scene.lookup("#" + entityID);
+            entity.setCenterX(x * 20 + 10);
+            entity.setCenterY(y * 20 + 10);
+        });
     }
 }

@@ -11,7 +11,7 @@ public class NormalEnemy implements Enemy {
     private int targetX;
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
-    private final int movement = 2;
+    private final static int vision = 2;
 
     public NormalEnemy(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
         this.inputStream = inputStream;
@@ -29,7 +29,7 @@ public class NormalEnemy implements Enemy {
     }
 
     public void move() throws IOException {
-        this.discover(movement);
+        this.discover(vision);
         outputStream.writeUTF("MOVE");
         int targetX;
         int targetY;
@@ -39,7 +39,6 @@ public class NormalEnemy implements Enemy {
             targetY = target[1];
         }
         while (!findPath(targetX, targetY));
-
         x = targetX;
         y = targetY;
         outputStream.writeInt(x);
