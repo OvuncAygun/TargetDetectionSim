@@ -1,8 +1,11 @@
 import java.awt.*;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.*;
+import java.util.Queue;
 
-public class NormalEnemy implements Enemy {
+public class NormalObserver implements Observer {
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
     private final Board board;
@@ -14,12 +17,12 @@ public class NormalEnemy implements Enemy {
     private final static int vision = 100;
     private final Deque<int[]> path = new ArrayDeque<>();
 
-    public NormalEnemy(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
+    public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.board = board;
-        outputStream.writeUTF("normalEnemy");
-        outputStream.writeUTF("enemyName");
+        outputStream.writeUTF("normalObserver");
+        outputStream.writeUTF("observerName");
         do {
             x = random.nextInt(0, board.xSize);
             y = random.nextInt(0, board.ySize);

@@ -31,16 +31,18 @@ public class Enemy implements Entity{
 
     public void discover() throws IOException {
         int size = inputStream.readInt();
+        StringBuilder data = new StringBuilder();
         for(int i = size; i >= -size; i--){
             if(x + i >= 0 && x + i < board.xSize) {
                 for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
                     if(y + j >= 0 && y + j < board.ySize) {
                         BoardTile boardTile = board.getBoardTile(x + i,y + j);
-                        outputStream.writeBoolean(boardTile.traversable);
+                        data.append(boardTile.traversable ? 1 : 0);
                     }
                 }
             }
         }
+        outputStream.writeUTF(data.toString());
     }
 
     public void remove() {
