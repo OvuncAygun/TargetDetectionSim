@@ -11,7 +11,8 @@ public class NormalEnemy implements Enemy {
     private int targetX;
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
-    private final static int vision = 2;
+    private final static int vision = 10;
+    private final Deque<int[]> path = new ArrayDeque<>();
 
     public NormalEnemy(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
         this.inputStream = inputStream;
@@ -33,14 +34,17 @@ public class NormalEnemy implements Enemy {
         outputStream.writeUTF("MOVE");
         int targetX;
         int targetY;
-        do {
-            int[] target = board.discoveredTiles.get(random.nextInt(0, board.discoveredTiles.size()));
-            targetX = target[0];
-            targetY = target[1];
+        if(path.isEmpty()) {
+            do {
+                int[] target = board.discoveredTiles.get(random.nextInt(0, board.discoveredTiles.size()));
+                targetX = target[0];
+                targetY = target[1];
+            }
+            while (!findPath(targetX, targetY));
         }
-        while (!findPath(targetX, targetY));
-        x = targetX;
-        y = targetY;
+        int[] movement = path.removeFirst();
+        x = movement[0];
+        y = movement[1];
         outputStream.writeInt(x);
         outputStream.writeInt(y);
 
@@ -50,6 +54,7 @@ public class NormalEnemy implements Enemy {
     public void discover(int size) throws IOException {
         outputStream.writeUTF("DISCOVER");
         outputStream.writeInt(size);
+
         for(int i = size; i >= -size; i--){
             if(x + i >= 0 && x + i < board.xSize) {
                 for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
@@ -98,11 +103,9 @@ public class NormalEnemy implements Enemy {
         }
         Point pathPoint = new Point(targetX, targetY);
         while(pathMap.containsKey(pathPoint)) {
-            System.out.printf("%d, %d\n", pathPoint.x, pathPoint.y);
+            path.addFirst(new int[] {pathPoint.x, pathPoint.y});
             pathPoint = pathMap.get(pathPoint);
         }
-        System.out.printf("%d, %d\n\n\n", pathPoint.x, pathPoint.y);
-
         return pathMap.containsKey(new Point(targetX, targetY));
     }
 }

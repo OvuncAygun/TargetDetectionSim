@@ -63,4 +63,11 @@ public class GUI extends Application {
             entity.setCenterY(y * 20 + 10);
         });
     }
+
+    public void removeEntity(String entityID) {
+        Platform.runLater(() -> {
+            Circle entity = (Circle) scene.lookup("#" + entityID);
+            rootList.remove(entity);
+        });
+    }
 }

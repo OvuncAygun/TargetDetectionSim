@@ -42,4 +42,8 @@ public class Enemy implements Entity{
             }
         }
     }
+
+    public void remove() {
+        gui.removeEntity(guiID);
+    }
 }

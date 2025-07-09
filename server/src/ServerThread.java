@@ -6,6 +6,7 @@ public class ServerThread implements Runnable {
     private final Socket clientSocket;
     private final Board board;
     private final GUI gui;
+    private Entity entity = null;
 
     public ServerThread(Socket clientSocket, Board board, GUI gui) {
         this.clientSocket = clientSocket;
@@ -15,7 +16,6 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run() {
-        Entity entity;
         try {
             DataInputStream inputStream = new DataInputStream(clientSocket.getInputStream());
             DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
@@ -49,6 +49,9 @@ public class ServerThread implements Runnable {
 
         }
         finally {
+            if(entity != null) {
+                entity.remove();
+            }
             if (clientSocket != null) {
                 try {
                     clientSocket.close();

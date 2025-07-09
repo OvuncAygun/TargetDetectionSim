@@ -6,4 +6,6 @@ public interface Entity {
     void move() throws IOException;
 
     void discover() throws IOException;
+
+    void remove();
 }
