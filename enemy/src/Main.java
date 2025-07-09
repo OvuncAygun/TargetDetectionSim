@@ -15,7 +15,7 @@ public class Main {
 
             while (true) {
                 enemy.move();
-                Thread.sleep(500);
+                Thread.sleep(100);
             }
 
 

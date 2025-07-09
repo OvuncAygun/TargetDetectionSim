@@ -11,6 +11,7 @@ public class Observer implements Entity{
     public String name;
     private int x;
     private int y;
+    private final ArrayList<String> markIDList = new ArrayList<>();
 
     public Observer(DataInputStream inputStream, DataOutputStream outputStream, Board board, GUI gui) throws IOException {
         this.inputStream = inputStream;
@@ -55,6 +56,7 @@ public class Observer implements Entity{
     }
 
     public void scan() throws IOException {
+        clearMarks();
         int scanRange = inputStream.readInt();
         StringBuilder data = new StringBuilder();
         for(int i = scanRange; i >= -scanRange; i--){
@@ -68,6 +70,18 @@ public class Observer implements Entity{
             }
         }
         outputStream.writeUTF(data.toString());
+    }
+
+    public void mark() throws IOException {
+        int x = inputStream.readInt();
+        int y = inputStream.readInt();
+        markIDList.add(gui.markEntity(guiID, x, y));
+    }
+
+    public void clearMarks() {
+        for(String markID : markIDList) {
+            gui.removeMark(markID);
+        }
     }
 
     public void remove() {

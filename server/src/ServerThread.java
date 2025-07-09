@@ -38,6 +38,9 @@ public class ServerThread implements Runnable {
                     case "SCAN":
                         entity.scan();
                         break;
+                    case "MARK":
+                        entity.mark();
+                        break;
                     default:
                         throw new IllegalArgumentException("Undefined command received");
                 }

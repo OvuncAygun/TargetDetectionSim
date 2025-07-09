@@ -3,7 +3,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.Queue;
 
 public class NormalObserver implements Observer {
     private final DataInputStream inputStream;
@@ -15,7 +14,7 @@ public class NormalObserver implements Observer {
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
     private final static int visionRange = 10;
-    private final static int scanRange = 10;
+    private final static int scanRange = 20;
     private final Deque<int[]> path = new ArrayDeque<>();
 
     public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
@@ -90,6 +89,15 @@ public class NormalObserver implements Observer {
                     }
                 }
             }
+        }
+        markEntities();
+    }
+
+    public void markEntities() throws IOException {
+        for (int[] entity : board.discoveredEntities) {
+            outputStream.writeUTF("MARK");
+            outputStream.writeInt(entity[0]);
+            outputStream.writeInt(entity[1]);
         }
     }
 

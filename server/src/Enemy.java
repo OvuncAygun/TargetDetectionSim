@@ -54,7 +54,11 @@ public class Enemy implements Entity{
     }
 
     public void scan() throws IOException {
-        System.out.println("Enemy does not have scan method");
+        System.out.println("Enemy does not have \"scan\" method");
+    }
+
+    public void mark() throws IOException {
+        System.out.println("Enemy does not have \"mark\" method");
     }
 
     public void remove() {

@@ -9,5 +9,7 @@ public interface Entity {
 
     void scan() throws IOException;
 
+    void mark() throws IOException;
+
     void remove();
 }

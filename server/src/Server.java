@@ -2,11 +2,14 @@ import java.io.*;
 import java.net.*;
 
 public class Server implements Runnable{
-    private final Board board = new Board(50, 50);
+    private final static int xSize = 50;
+    private final static int ySize = 50;
+    private final Board board = new Board(xSize, ySize);
     private final GUI gui;
 
     public Server(GUI gui) {
         this.gui = gui;
+        gui.initialize(1000, 1000, xSize, ySize);
     }
 
     @Override
