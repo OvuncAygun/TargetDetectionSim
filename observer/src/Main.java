@@ -14,7 +14,7 @@ public class Main {
             observer = new NormalObserver(inputStream, outputStream, board);
 
             while (true) {
-                observer.discover(5);
+                observer.scan();
                 Thread.sleep(100);
             }
 

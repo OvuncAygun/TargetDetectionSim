@@ -1,7 +1,8 @@
 import javax.imageio.IIOException;
 import java.io.*;
+import java.util.ArrayList;
 
-public class Enemy implements Entity{
+public class Observer implements Entity{
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
     private final Board board;
@@ -11,7 +12,7 @@ public class Enemy implements Entity{
     private int x;
     private int y;
 
-    public Enemy(DataInputStream inputStream, DataOutputStream outputStream, Board board, GUI gui) throws IOException {
+    public Observer(DataInputStream inputStream, DataOutputStream outputStream, Board board, GUI gui) throws IOException {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.board = board;
@@ -26,7 +27,7 @@ public class Enemy implements Entity{
         }
         outputStream.writeBoolean(true);
         board.getBoardTile(x, y).tileEntities.add(this);
-        this.guiID = gui.addEnemy(x, y);
+        this.guiID = gui.addObserver(x, y);
     }
 
     public void move() throws IOException {
@@ -54,7 +55,19 @@ public class Enemy implements Entity{
     }
 
     public void scan() throws IOException {
-        System.out.println("Enemy does not have scan method");
+        int scanRange = inputStream.readInt();
+        StringBuilder data = new StringBuilder();
+        for(int i = scanRange; i >= -scanRange; i--){
+            if(x + i >= 0 && x + i < board.xSize) {
+                for(int j = scanRange - Math.abs(i); j >= Math.abs(i) - scanRange; j--){
+                    if(y + j >= 0 && y + j < board.ySize) {
+                        BoardTile boardTile = board.getBoardTile(x + i,y + j);
+                        data.append(boardTile.tileEntities.isEmpty() ? 0 : 1);
+                    }
+                }
+            }
+        }
+        outputStream.writeUTF(data.toString());
     }
 
     public void remove() {

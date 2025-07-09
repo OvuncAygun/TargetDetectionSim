@@ -56,6 +56,17 @@ public class GUI extends Application {
         });
         return id;
     }
+    public String addObserver(int x, int y) {
+        Circle observer = new Circle(x * 20 + 10, y * 20 + 10,8);
+        String id = "observer-" + idCounter;
+        idCounter++;
+        observer.setId(id);
+        observer.setFill(Color.BLUE);
+        Platform.runLater(() -> {
+            rootList.add(observer);
+        });
+        return id;
+    }
     public void moveEntity(String entityID, int x, int y) {
         Platform.runLater(() -> {
             Circle entity = (Circle) scene.lookup("#" + entityID);

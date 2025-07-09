@@ -11,14 +11,14 @@ public class NormalEnemy implements Enemy {
     private int targetX;
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
-    private final static int vision = 100;
+    private final static int visionRange = 10;
     private final Deque<int[]> path = new ArrayDeque<>();
 
     public NormalEnemy(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.board = board;
-        outputStream.writeUTF("normalEnemy");
+        outputStream.writeUTF("enemy");
         outputStream.writeUTF("enemyName");
         do {
             x = random.nextInt(0, board.xSize);
@@ -30,7 +30,7 @@ public class NormalEnemy implements Enemy {
     }
 
     public void move() throws IOException {
-        this.discover(vision);
+        this.discover(visionRange);
         outputStream.writeUTF("MOVE");
         int targetX;
         int targetY;

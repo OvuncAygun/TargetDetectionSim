@@ -14,14 +14,15 @@ public class NormalObserver implements Observer {
     private int targetX;
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
-    private final static int vision = 100;
+    private final static int visionRange = 10;
+    private final static int scanRange = 10;
     private final Deque<int[]> path = new ArrayDeque<>();
 
     public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.board = board;
-        outputStream.writeUTF("normalObserver");
+        outputStream.writeUTF("observer");
         outputStream.writeUTF("observerName");
         do {
             x = random.nextInt(0, board.xSize);
@@ -33,7 +34,7 @@ public class NormalObserver implements Observer {
     }
 
     public void move() throws IOException {
-        this.discover(vision);
+        this.discover(visionRange);
         outputStream.writeUTF("MOVE");
         int targetX;
         int targetY;
@@ -66,6 +67,26 @@ public class NormalObserver implements Observer {
                         boolean traversable = data.charAt(index) == '1';
                         index++;
                         board.discoverBoardTile(x + i, y + j, traversable);
+                    }
+                }
+            }
+        }
+    }
+
+    public void scan() throws IOException {
+        outputStream.writeUTF("SCAN");
+        outputStream.writeInt(scanRange);
+        String data = inputStream.readUTF();
+        board.discoveredEntities = new ArrayList<>();
+        int index = 0;
+        for(int i = scanRange; i >= -scanRange; i--){
+            if(x + i >= 0 && x + i < board.xSize) {
+                for(int j = scanRange - Math.abs(i); j >= Math.abs(i) - scanRange; j--){
+                    if(y + j >= 0 && y + j < board.ySize) {
+                        if(data.charAt(index) == '1') {
+                            board.discoveredEntities.add(new int[] {x + i, y + j});
+                        }
+                        index++;
                     }
                 }
             }

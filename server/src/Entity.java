@@ -7,5 +7,7 @@ public interface Entity {
 
     void discover() throws IOException;
 
+    void scan() throws IOException;
+
     void remove();
 }

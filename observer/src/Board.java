@@ -5,6 +5,7 @@ public class Board {
     public int ySize;
     public BoardTile[][] boardTiles;
     public ArrayList<int[]> discoveredTiles = new ArrayList<>();
+    public ArrayList<int[]> discoveredEntities = new ArrayList<>();
 
     public Board(int xSize, int ySize) {
         this.xSize = xSize;

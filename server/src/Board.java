@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Board {
     public int xSize;
     public int ySize;

@@ -21,7 +21,8 @@ public class ServerThread implements Runnable {
             DataOutputStream outputStream = new DataOutputStream(clientSocket.getOutputStream());
             String type = inputStream.readUTF();
             entity = switch (type) {
-                case "normalEnemy" -> new Enemy(inputStream, outputStream, board, gui);
+                case "enemy" -> new Enemy(inputStream, outputStream, board, gui);
+                case "observer" -> new Observer(inputStream, outputStream, board, gui);
                 default -> throw new IllegalArgumentException("Undefined type received for entity creation");
             };
 
@@ -33,6 +34,9 @@ public class ServerThread implements Runnable {
                         break;
                     case "DISCOVER":
                         entity.discover();
+                        break;
+                    case "SCAN":
+                        entity.scan();
                         break;
                     default:
                         throw new IllegalArgumentException("Undefined command received");
