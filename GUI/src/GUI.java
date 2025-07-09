@@ -10,8 +10,6 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
-
 public class GUI extends Application {
     private Stage primaryStage;
     private Group root;

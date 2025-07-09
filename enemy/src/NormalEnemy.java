@@ -32,8 +32,6 @@ public class NormalEnemy implements Enemy {
     public void move() throws IOException {
         this.discover(visionRange);
         outputStream.writeUTF("MOVE");
-        int targetX;
-        int targetY;
         if(path.isEmpty()) {
             do {
                 int[] target = board.discoveredTiles.get(random.nextInt(0, board.discoveredTiles.size()));

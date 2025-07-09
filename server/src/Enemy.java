@@ -1,4 +1,3 @@
-import javax.imageio.IIOException;
 import java.io.*;
 
 public class Enemy implements Entity{
