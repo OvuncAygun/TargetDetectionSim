@@ -10,18 +10,27 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class GUI extends Application {
     private Stage primaryStage;
+    private Group backgroundLayer;
+    private Group gridLayer;
+    private Group entityLayer;
     private Group root;
-    private ObservableList<Node> rootList;
     private Scene scene;
-    private int idCounter = 0;
     private int width;
     private int height;
     private int gridXCount;
     private int gridYCount;
     private int gridXSize;
     private int gridYSize;
+    private final AtomicInteger idCounter = new AtomicInteger(0);
+    private final Map<String, GUITile> tileMap = new HashMap<>();
+    private final Map<String, GUIEntity> entityMap = new HashMap<>();
+    private final Map<String, GUIMark> markMap = new HashMap<>();
 
     public static void main(String[] args) {
         launch(args);
@@ -30,8 +39,8 @@ public class GUI extends Application {
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        Server clientHandler = new Server(this);
-        new Thread(clientHandler).start();
+        Server server = new Server(this);
+        new Thread(server).start();
     }
 
     public void initialize(int width, int height, int gridXCount, int gridYCount) {
@@ -40,85 +49,89 @@ public class GUI extends Application {
         this.gridXCount = gridXCount;
         this.gridYCount = gridYCount;
         this.gridXSize = width / gridXCount;
-        this.gridYSize = width / gridYCount;
-        root = new Group();
-        this.rootList = root.getChildren();
+        this.gridYSize = height / gridYCount;
+        backgroundLayer = new Group();
+        gridLayer = new Group();
+        entityLayer = new Group();
+        root = new Group(backgroundLayer, gridLayer, entityLayer);
         scene = new Scene(root, width, height);
-        scene.setFill(Color.WHITESMOKE);
+        scene.setFill(Color.BLACK);
         primaryStage.setTitle("Target Detection Simulation");
         primaryStage.setScene(scene);
 
-        Line line;
-        for (int i = 0; i <= gridXCount; i++) {
-            line = new Line(0, i * gridXSize, width, i * gridXSize);
-            line.setStroke(Color.LIGHTSLATEGRAY);
-            rootList.add(line);
-        }
-        for (int i = 0; i <= gridYCount; i++) {
-            line = new Line(i * gridYSize, 0, i * gridYSize, height);
-            line.setStroke(Color.LIGHTSLATEGRAY);
-            rootList.add(line);
+        Rectangle rectangle;
+        for (int i = 0; i < gridXCount; i++) {
+            for (int j = 0; j < gridYCount; j++) {
+                rectangle = new Rectangle(i * gridXSize, j * gridYSize, gridXSize, gridYSize);
+                String id = "grid-" + i + "-" + j;
+                rectangle.setId(id);
+                rectangle.setFill(Color.WHITESMOKE);
+                rectangle.setStroke(Color.LIGHTSLATEGRAY);
+                rectangle.setStrokeWidth(1);
+                backgroundLayer.getChildren().add(rectangle);
+                tileMap.put(id, new GUITile(id, rectangle));
+            }
         }
         primaryStage.show();
     }
 
     public String addEnemy(int x, int y) {
         Circle enemy = new Circle((x * gridXSize) + ((double) gridXSize / 2), (y * gridYSize) + ((double) gridYSize / 2),8);
-        String id = "enemy-" + idCounter;
-        idCounter++;
+        String id = "enemy-" + idCounter.getAndIncrement();
         enemy.setId(id);
         enemy.setFill(Color.RED);
         Platform.runLater(() -> {
-            rootList.add(enemy);
+            entityLayer.getChildren().add(enemy);
         });
+        entityMap.put(id, new GUIEntity(id, enemy));
         return id;
     }
     public String addObserver(int x, int y) {
         Circle observer = new Circle((x * gridXSize) + ((double) gridXSize / 2), (y * gridYSize) + ((double) gridYSize / 2),8);
-        String id = "observer-" + idCounter;
-        idCounter++;
+        String id = "observer-" + idCounter.getAndIncrement();
         observer.setId(id);
         observer.setFill(Color.BLUE);
         Platform.runLater(() -> {
-            rootList.add(observer);
+            entityLayer.getChildren().add(observer);
         });
+        entityMap.put(id, new GUIEntity(id, observer));
         return id;
     }
     public void moveEntity(String entityID, int x, int y) {
+        Circle entity = entityMap.get(entityID).node;
         Platform.runLater(() -> {
-            Circle entity = (Circle) scene.lookup("#" + entityID);
             entity.setCenterX((x * gridXSize) + ((double) gridXSize /2));
             entity.setCenterY((y * gridYSize) + ((double) gridYSize /2));
         });
     }
 
     public void removeEntity(String entityID) {
+        Circle entity = entityMap.get(entityID).node;
         Platform.runLater(() -> {
-            Circle entity = (Circle) scene.lookup("#" + entityID);
-            rootList.remove(entity);
+            entityLayer.getChildren().remove(entity);
         });
+        entityMap.remove(entityID);
     }
 
     public String markEntity(String entityID, int x, int y) {
         Rectangle mark = new Rectangle(x * gridXSize, y * gridYSize, gridXSize, gridYSize);
-        String id = entityID + idCounter;
-        idCounter++;
+        String id = entityID + idCounter.getAndIncrement();
         mark.setId(id);
         mark.setStroke(Color.BLUE);
         mark.setStrokeWidth(2);
         mark.setFill(Color.TRANSPARENT);
         Platform.runLater(() -> {
-            rootList.add(mark);
+            entityLayer.getChildren().add(mark);
         });
+        markMap.put(id, new GUIMark(id, mark));
         return id;
     }
 
     public void removeMark(String markID) {
+        Rectangle mark = markMap.get(markID).node;
         Platform.runLater(() -> {
-            Rectangle mark = (Rectangle) scene.lookup("#" + markID);
-            rootList.remove(mark);
+            entityLayer.getChildren().remove(mark);
         });
+        markMap.remove(markID);
     }
-
-
 }
