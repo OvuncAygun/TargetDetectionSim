@@ -250,6 +250,41 @@ public class GUI extends Application {
                 }
             }
         });
+    }
 
+    public void drawRangeCircular(String entityID) {
+        GUIEntity entity = entityMap.get(entityID);
+        for(int i = 0; i < gridXCount; i++) {
+            for (int j = 0; j < gridYCount; j++) {
+                GUITile guiTile = grid[i][j];
+                guiTile.observerSet.remove(entityID);
+            }
+        }
+        for(int i = entity.scanRange; i >= -entity.scanRange; i--){
+            if(entity.x + i >= 0 && entity.x + i < gridXCount) {
+                int jValue = (int) Math.round(Math.sqrt((Math.pow(entity.scanRange + 0.5, 2) - Math.pow(i, 2))) - 0.5);
+                for(int j = jValue;
+                    j >= -jValue;
+                    j--){
+                    if(entity.y + j >= 0 && entity.y + j < gridYCount) {
+                        GUITile guiTile = grid[entity.x + i][entity.y + j];
+                        guiTile.observerSet.add(entityID);
+                    }
+                }
+            }
+        }
+        Platform.runLater(() -> {
+            for(int i = 0; i < gridXCount; i++) {
+                for (int j = 0; j < gridYCount; j++) {
+                    GUITile guiTile = grid[i][j];
+                    if (guiTile.observerSet.isEmpty() && guiTile.node.getFill() == Color.LIGHTBLUE) {
+                        guiTile.node.setFill(Color.WHITESMOKE);
+                    }
+                    else if (!guiTile.observerSet.isEmpty() && guiTile.node.getFill() == Color.WHITESMOKE) {
+                        guiTile.node.setFill(Color.LIGHTBLUE);
+                    }
+                }
+            }
+        });
     }
 }

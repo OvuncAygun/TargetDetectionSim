@@ -92,6 +92,30 @@ public class NormalObserver implements Observer {
         markEntities();
     }
 
+    public void scanCircular() throws IOException{
+        outputStream.writeUTF("SCAN_CIRCULAR");
+        outputStream.writeInt(scanRange);
+        String data = inputStream.readUTF();
+        board.discoveredEntities = new ArrayList<>();
+        int index = 0;
+        for(int i = scanRange; i >= -scanRange; i--){
+            if(x + i >= 0 && x + i < board.xSize) {
+                int jValue = (int) Math.round(Math.sqrt((Math.pow(scanRange + 0.5, 2) - Math.pow(i, 2))) - 0.5);
+                for(int j = jValue;
+                    j >= -jValue;
+                    j--){
+                    if(y + j >= 0 && y + j < board.ySize) {
+                        if(data.charAt(index) == '1') {
+                            board.discoveredEntities.add(new int[] {x + i, y + j});
+                        }
+                        index++;
+                    }
+                }
+            }
+        }
+        markEntities();
+    }
+
     public void markEntities() throws IOException {
         for (int[] entity : board.discoveredEntities) {
             outputStream.writeUTF("MARK");

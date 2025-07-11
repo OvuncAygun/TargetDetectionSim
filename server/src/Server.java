@@ -2,8 +2,8 @@ import java.io.*;
 import java.net.*;
 
 public class Server implements Runnable{
-    private final static int xSize = 20;
-    private final static int ySize = 20;
+    private final static int xSize = 25;
+    private final static int ySize = 25;
     private final Board board = new Board(xSize, ySize);
     private final GUI gui;
 

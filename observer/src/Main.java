@@ -17,8 +17,10 @@ public class Main {
 
             int i = 0;
             while (true) {
-                observer.move();
-                observer.scan();
+                if (i % 10 == 0) {
+                    observer.move();
+                }
+                observer.scanCircular();
                 i++;
                 Thread.sleep(100);
             }
