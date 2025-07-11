@@ -87,7 +87,7 @@ public class GUI extends Application {
                 rectangle.setManaged(false);
                 rectangle.widthProperty().bind(stackPane.widthProperty());
                 rectangle.heightProperty().bind(stackPane.heightProperty());
-                grid[i][j] = new GUITile(id, stackPane, rectangle);
+                grid[i][j] = new GUITile(id, stackPane, rectangle, i, j);
             }
         }
 
@@ -96,51 +96,62 @@ public class GUI extends Application {
     }
 
     public String addEnemy(int x, int y) {
+        GUITile guiTile = grid[x][y];
         Circle enemy = new Circle();
         String id = "enemy-" + idCounter.getAndIncrement();
         enemy.setId(id);
         enemy.setFill(Color.RED);
         enemy.setManaged(false);
-        GUIEntity guiEntity = new GUIEntity(id, enemy, x, y, 0, grid[x][y].entityLayer);
+        GUIEntity guiEntity = new GUIEntity(id, enemy, x, y, 0, guiTile.entityLayer);
         entityMap.put(id, guiEntity);
         Platform.runLater(() -> {
             guiEntity.node.radiusProperty().bind(Bindings.createDoubleBinding(
-                    () -> (Math.min(grid[x][y].stackPane.getWidth(), grid[x][y].stackPane.getHeight()) * 0.4),
-                    grid[x][y].stackPane.widthProperty(),
-                    grid[x][y].stackPane.heightProperty()));
+                    () -> (Math.min(guiTile.stackPane.getWidth(), guiTile.stackPane.getHeight()) * 0.4),
+                    guiTile.stackPane.widthProperty(),
+                    guiTile.stackPane.heightProperty()));;
+            guiEntity.node.centerXProperty().bind(guiTile.stackPane.widthProperty().multiply(0.5));
+            guiEntity.node.centerYProperty().bind(guiTile.stackPane.heightProperty().multiply(0.5));
             guiEntity.group.getChildren().add(guiEntity.node);
         });
         return id;
     }
     public String addObserver(int x, int y, int scanRange) {
+        GUITile guiTile = grid[x][y];
         Circle observer = new Circle();
         String id = "observer-" + idCounter.getAndIncrement();
         observer.setId(id);
         observer.setFill(Color.BLUE);
         observer.setManaged(false);
-        GUIEntity guiEntity = new GUIEntity(id, observer, x, y, scanRange, grid[x][y].entityLayer);
+        GUIEntity guiEntity = new GUIEntity(id, observer, x, y, scanRange, guiTile.entityLayer);
         entityMap.put(id, guiEntity);
         Platform.runLater(() -> {
             guiEntity.node.radiusProperty().bind(Bindings.createDoubleBinding(
-                    () -> (Math.min(grid[x][y].stackPane.getWidth(), grid[x][y].stackPane.getHeight()) * 0.4),
-                    grid[x][y].stackPane.widthProperty(),
-                    grid[x][y].stackPane.heightProperty()));
+                    () -> (Math.min(guiTile.stackPane.getWidth(), guiTile.stackPane.getHeight()) * 0.4),
+                    guiTile.stackPane.widthProperty(),
+                    guiTile.stackPane.heightProperty()));;
+            guiEntity.node.centerXProperty().bind(guiTile.stackPane.widthProperty().multiply(0.5));
+            guiEntity.node.centerYProperty().bind(guiTile.stackPane.heightProperty().multiply(0.5));
             guiEntity.group.getChildren().add(observer);
         });
         return id;
     }
     public void moveEntity(String entityID, int x, int y) {
+        GUITile guiTile = grid[x][y];
         GUIEntity guiEntity = entityMap.get(entityID);
         Platform.runLater(() -> {
             guiEntity.group.getChildren().remove(guiEntity.node);
             guiEntity.node.radiusProperty().unbind();
+            guiEntity.node.centerXProperty().unbind();
+            guiEntity.node.centerYProperty().unbind();
+            guiEntity.group = guiTile.entityLayer;
         });
-        guiEntity.group = grid[x][y].entityLayer;
         Platform.runLater(() -> {
             guiEntity.node.radiusProperty().bind(Bindings.createDoubleBinding(
-                    () -> (Math.min(grid[x][y].stackPane.getWidth(), grid[x][y].stackPane.getHeight()) * 0.4),
-                    grid[x][y].stackPane.widthProperty(),
-                    grid[x][y].stackPane.heightProperty()));
+                    () -> (Math.min(guiTile.stackPane.getWidth(), guiTile.stackPane.getHeight()) * 0.4),
+                    guiTile.stackPane.widthProperty(),
+                    guiTile.stackPane.heightProperty()));
+            guiEntity.node.centerXProperty().bind(guiTile.stackPane.widthProperty().multiply(0.5));
+            guiEntity.node.centerYProperty().bind(guiTile.stackPane.heightProperty().multiply(0.5));
             guiEntity.group.getChildren().add(guiEntity.node);
         });
         guiEntity.x = x;
@@ -148,35 +159,51 @@ public class GUI extends Application {
     }
 
     public void removeEntity(String entityID) {
-        GUIEntity entity = entityMap.get(entityID);
+        GUIEntity guiEntity = entityMap.get(entityID);
         Platform.runLater(() -> {
-            entity.group.getChildren().remove(entity.node);
-            entity.node.radiusProperty().unbind();
+            guiEntity.group.getChildren().remove(guiEntity.node);
+            guiEntity.node.radiusProperty().unbind();
+            guiEntity.node.centerXProperty().unbind();
+            guiEntity.node.centerYProperty().unbind();
         });
         entityMap.remove(entityID);
-        for(int i = 0; i < gridXCount; i++) {
-            for (int j = 0; j < gridYCount; j++) {
-                GUITile tile = grid[i][j];
-                tile.observerSet.remove(entityID);
-                tile.checkObserverSet();
+        Platform.runLater(() -> {
+            for(int i = 0; i < gridXCount; i++) {
+                for (int j = 0; j < gridYCount; j++) {
+                    GUITile guiTile = grid[i][j];
+                    guiTile.observerSet.remove(entityID);
+                    if (guiTile.observerSet.isEmpty() && guiTile.node.getFill() == Color.LIGHTBLUE) {
+                        guiTile.node.setFill(Color.WHITESMOKE);
+                    }
+                }
             }
-        }
+            for (int i = 0; i < guiEntity.markList.size(); i++) {
+                GUIMark guiMark = guiEntity.markList.get(i);
+                guiMark.group.getChildren().remove(guiMark.node);
+                guiMark.node.widthProperty().unbind();
+                guiMark.node.heightProperty().unbind();
+                markMap.remove(guiMark.id);
+            }
+        });
     }
 
     public String markEntity(String entityID, int x, int y) {
-        Rectangle mark = new Rectangle();
+        GUITile guiTile = grid[x][y];
         String id = entityID + "-" + idCounter.getAndIncrement();
+        Rectangle mark = new Rectangle();
         mark.setId(id);
-        mark.setStroke(Color.BLUE);
         mark.setStrokeType(StrokeType.INSIDE);
-        mark.setStrokeWidth(2);
         mark.setFill(Color.TRANSPARENT);
+        mark.setStroke(Color.BLUE);
+        mark.setStrokeWidth(1.5);
         mark.setManaged(false);
-        GUIMark guiMark = new GUIMark(id, mark, x, y, grid[x][y].markLayer);
+        GUIMark guiMark = new GUIMark(id, mark, x, y, entityID, guiTile.markLayer);
         markMap.put(id, guiMark);
+        GUIEntity guiEntity = entityMap.get(entityID);
+        guiEntity.markList.add(guiMark);
         Platform.runLater(() -> {
-            guiMark.node.widthProperty().bind(grid[x][y].stackPane.widthProperty());
-            guiMark.node.heightProperty().bind(grid[x][y].stackPane.heightProperty());
+            guiMark.node.widthProperty().bind(guiTile.stackPane.widthProperty());
+            guiMark.node.heightProperty().bind(guiTile.stackPane.heightProperty());
             guiMark.group.getChildren().add(guiMark.node);
         });
         return id;
@@ -196,25 +223,33 @@ public class GUI extends Application {
         GUIEntity entity = entityMap.get(entityID);
         for(int i = 0; i < gridXCount; i++) {
             for (int j = 0; j < gridYCount; j++) {
-                GUITile tile = grid[i][j];
-                tile.observerSet.remove(entityID);
+                GUITile guiTile = grid[i][j];
+                guiTile.observerSet.remove(entityID);
             }
         }
         for(int i = entity.scanRange; i >= -entity.scanRange; i--){
             if(entity.x + i >= 0 && entity.x + i < gridXCount) {
                 for(int j = entity.scanRange - Math.abs(i); j >= Math.abs(i) - entity.scanRange; j--){
                     if(entity.y + j >= 0 && entity.y + j < gridYCount) {
-                        GUITile tile = grid[entity.x + i][entity.y + j];
-                        tile.observerSet.add(entityID);
+                        GUITile guiTile = grid[entity.x + i][entity.y + j];
+                        guiTile.observerSet.add(entityID);
                     }
                 }
             }
         }
-        for(int i = 0; i < gridXCount; i++) {
-            for (int j = 0; j < gridYCount; j++) {
-                GUITile tile = grid[i][j];
-                tile.checkObserverSet();
+        Platform.runLater(() -> {
+            for(int i = 0; i < gridXCount; i++) {
+                for (int j = 0; j < gridYCount; j++) {
+                    GUITile guiTile = grid[i][j];
+                    if (guiTile.observerSet.isEmpty() && guiTile.node.getFill() == Color.LIGHTBLUE) {
+                        guiTile.node.setFill(Color.WHITESMOKE);
+                    }
+                    else if (!guiTile.observerSet.isEmpty() && guiTile.node.getFill() == Color.WHITESMOKE) {
+                        guiTile.node.setFill(Color.LIGHTBLUE);
+                    }
+                }
             }
-        }
+        });
+
     }
 }

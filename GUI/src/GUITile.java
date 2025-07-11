@@ -11,14 +11,23 @@ public class GUITile {
     public String id;
     public StackPane stackPane;
     public Rectangle node;
+    public int x;
+    public int y;
     public final Set<String> observerSet = new HashSet<>();
     public Group entityLayer = new Group();
     public Group markLayer = new Group();
 
-    public GUITile(String id, StackPane stackPane, Rectangle node) {
+    public GUITile(String id, StackPane stackPane, Rectangle node, int x, int y) {
         this.id = id;
         this.stackPane = stackPane;
         this.node = node;
+        this.x = x;
+        this.y = y;
+        node.setId("rectangle(%d,%d)".formatted(x, y));
+        entityLayer.setId("entityLayer[%d,%d]".formatted(x, y));
+        markLayer.setId("markLayer[%d,%d]".formatted(x, y));
+        entityLayer.setManaged(false);
+        markLayer.setManaged(false);
         stackPane.getChildren().addAll(node, entityLayer, markLayer);
     }
 

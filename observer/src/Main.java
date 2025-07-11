@@ -5,16 +5,21 @@ public class Main {
     public static void main(String[] args) {
         Socket socket = null;
         Observer observer;
-        Board board = new Board(50, 50);
 
         try {
             socket = new Socket("localhost", 1111);
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+            int xSize = inputStream.readInt();
+            int ySize = inputStream.readInt();
+            Board board = new Board(xSize, ySize);
             observer = new NormalObserver(inputStream, outputStream, board);
 
+            int i = 0;
             while (true) {
+                observer.move();
                 observer.scan();
+                i++;
                 Thread.sleep(100);
             }
 

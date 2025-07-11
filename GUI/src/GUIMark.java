@@ -7,12 +7,14 @@ public class GUIMark {
     public int x;
     public int y;
     public Group group;
+    public String observerID;
 
-    public GUIMark(String id, Rectangle node, int x, int y, Group group) {
+    public GUIMark(String id, Rectangle node, int x, int y, String observerID, Group group) {
         this.id = id;
         this.node = node;
         this.x = x;
         this.y = y;
+        this.observerID = observerID;
         this.group = group;
     }
 }

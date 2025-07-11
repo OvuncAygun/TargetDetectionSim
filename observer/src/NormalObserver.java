@@ -13,8 +13,8 @@ public class NormalObserver implements Observer {
     private int targetX;
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
-    private final static int visionRange = 10;
-    private final static int scanRange = 20;
+    private final static int visionRange = 100;
+    private final static int scanRange = 10;
     private final Deque<int[]> path = new ArrayDeque<>();
 
     public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {

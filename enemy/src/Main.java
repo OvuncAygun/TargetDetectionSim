@@ -5,12 +5,14 @@ public class Main {
     public static void main(String[] args) {
         Socket socket = null;
         Enemy enemy;
-        Board board = new Board(50, 50);
 
         try {
             socket = new Socket("localhost", 1111);
             DataInputStream inputStream = new DataInputStream(socket.getInputStream());
             DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+            int xSize = inputStream.readInt();
+            int ySize = inputStream.readInt();
+            Board board = new Board(xSize, ySize);
             enemy = new NormalEnemy(inputStream, outputStream, board);
 
             while (true) {
