@@ -30,6 +30,7 @@ public class NormalObserver implements Observer {
             outputStream.writeInt(y);
         }
         while (!inputStream.readBoolean());
+        outputStream.writeInt(scanRange);
     }
 
     public void move() throws IOException {

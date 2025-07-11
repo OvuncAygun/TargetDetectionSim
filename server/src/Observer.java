@@ -1,5 +1,6 @@
 import java.io.*;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Observer implements Entity{
     private final DataInputStream inputStream;
@@ -10,7 +11,7 @@ public class Observer implements Entity{
     public String name;
     private int x;
     private int y;
-    private final ArrayList<String> markIDList = new ArrayList<>();
+    private final Set<String> markIDSet = new HashSet<>();
 
     public Observer(DataInputStream inputStream, DataOutputStream outputStream, Board board, GUI gui) throws IOException {
         this.inputStream = inputStream;
@@ -26,8 +27,10 @@ public class Observer implements Entity{
             this.y = inputStream.readInt();
         }
         outputStream.writeBoolean(true);
+        int scanRange = inputStream.readInt();
         board.getBoardTile(x, y).tileEntities.add(this);
-        this.guiID = gui.addObserver(x, y);
+        this.guiID = gui.addObserver(x, y, scanRange);
+        gui.drawRange(guiID);
     }
 
     public void move() throws IOException {
@@ -36,6 +39,7 @@ public class Observer implements Entity{
         y = inputStream.readInt();
         board.getBoardTile(x, y).tileEntities.add(this);
         gui.moveEntity(guiID, x, y);
+        gui.drawRange(guiID);
     }
 
     public void discover() throws IOException {
@@ -74,13 +78,14 @@ public class Observer implements Entity{
     public void mark() throws IOException {
         int x = inputStream.readInt();
         int y = inputStream.readInt();
-        markIDList.add(gui.markEntity(guiID, x, y));
+        markIDSet.add(gui.markEntity(guiID, x, y));
     }
 
     public void clearMarks() {
-        for(String markID : markIDList) {
+        for(String markID : markIDSet) {
             gui.removeMark(markID);
         }
+        markIDSet.clear();
     }
 
     public void remove() {
