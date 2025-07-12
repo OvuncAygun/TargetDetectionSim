@@ -2,6 +2,7 @@ import java.awt.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 public class NormalObserver implements Observer {
@@ -94,10 +95,8 @@ public class NormalObserver implements Observer {
 
     public void scanCircular() throws IOException{
         outputStream.writeUTF("SCAN_CIRCULAR");
-        outputStream.writeInt(scanRange);
-        String data = inputStream.readUTF();
-        board.discoveredEntities = new ArrayList<>();
-        int index = 0;
+        ArrayList<Integer> coordinateArray = new ArrayList<Integer>();
+        int coordinateCount = 0;
         for(int i = scanRange; i >= -scanRange; i--){
             if(x + i >= 0 && x + i < board.xSize) {
                 int jValue = (int) Math.round(Math.sqrt((Math.pow(scanRange + 0.5, 2) - Math.pow(i, 2))) - 0.5);
@@ -105,12 +104,28 @@ public class NormalObserver implements Observer {
                     j >= -jValue;
                     j--){
                     if(y + j >= 0 && y + j < board.ySize) {
-                        if(data.charAt(index) == '1') {
-                            board.discoveredEntities.add(new int[] {x + i, y + j});
-                        }
-                        index++;
+                        coordinateArray.add(x + i);
+                        coordinateArray.add(y + j);
+                        coordinateCount++;
                     }
                 }
+            }
+        }
+        ByteBuffer outputByteBuffer = ByteBuffer.allocate(coordinateCount * (2 * Integer.BYTES));
+        for (int coordinate : coordinateArray) {
+            outputByteBuffer.putInt(coordinate);
+        }
+        outputStream.writeInt(coordinateCount);
+        outputStream.write(outputByteBuffer.array());
+
+        ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputStream.readNBytes(coordinateCount * (2 * Integer.BYTES + 1)));
+        board.discoveredEntities = new ArrayList<>();
+        while (inputByteBuffer.hasRemaining()) {
+            int x = inputByteBuffer.getInt();
+            int y = inputByteBuffer.getInt();
+            boolean enemyExists = inputByteBuffer.get() == (byte) 1;
+            if (enemyExists) {
+                board.discoveredEntities.add(new int[] {x, y});
             }
         }
         markEntities();

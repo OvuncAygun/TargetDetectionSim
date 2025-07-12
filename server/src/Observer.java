@@ -1,6 +1,9 @@
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 public class Observer implements Entity{
     private final DataInputStream inputStream;
@@ -77,22 +80,18 @@ public class Observer implements Entity{
 
     public void scanCircular() throws IOException {
         clearMarks();
-        int scanRange = inputStream.readInt();
-        StringBuilder data = new StringBuilder();
-        for(int i = scanRange; i >= -scanRange; i--){
-            if(x + i >= 0 && x + i < board.xSize) {
-                int jValue = (int) Math.round(Math.sqrt((Math.pow(scanRange + 0.5, 2) - Math.pow(i, 2))) - 0.5);
-                for(int j = jValue;
-                    j >= -jValue;
-                    j--){
-                    if(y + j >= 0 && y + j < board.ySize) {
-                        BoardTile boardTile = board.getBoardTile(x + i,y + j);
-                        data.append(boardTile.tileEntities.isEmpty() ? 0 : 1);
-                    }
-                }
-            }
+        int coordinateCount = inputStream.readInt();
+        ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputStream.readNBytes(coordinateCount * (2 * Integer.BYTES)));
+        ByteBuffer outputByteBuffer = ByteBuffer.allocate(coordinateCount * (2 * Integer.BYTES + 1));
+        while (inputByteBuffer.hasRemaining()) {
+            int x = inputByteBuffer.getInt();
+            int y = inputByteBuffer.getInt();
+            BoardTile boardTile = board.getBoardTile(x,y);
+            outputByteBuffer.putInt(x);
+            outputByteBuffer.putInt(y);
+            outputByteBuffer.put(boardTile.tileEntities.isEmpty() ? (byte) 0 : (byte) 1);
         }
-        outputStream.writeUTF(data.toString());
+        outputStream.write(outputByteBuffer.array());
     }
 
     public void mark() throws IOException {
