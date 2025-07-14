@@ -33,7 +33,7 @@ public class Observer implements Entity{
         int scanRange = inputStream.readInt();
         board.getBoardTile(x, y).tileEntities.add(this);
         this.guiID = gui.addObserver(x, y, scanRange);
-        gui.drawRangeCircular(guiID);
+        gui.drawRange(guiID);
     }
 
     public void move() throws IOException {
@@ -42,43 +42,25 @@ public class Observer implements Entity{
         y = inputStream.readInt();
         board.getBoardTile(x, y).tileEntities.add(this);
         gui.moveEntity(guiID, x, y);
-        gui.drawRangeCircular(guiID);
+        gui.drawRange(guiID);
     }
 
     public void discover() throws IOException {
-        int size = inputStream.readInt();
-        StringBuilder data = new StringBuilder();
-        for(int i = size; i >= -size; i--){
-            if(x + i >= 0 && x + i < board.xSize) {
-                for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
-                    if(y + j >= 0 && y + j < board.ySize) {
-                        BoardTile boardTile = board.getBoardTile(x + i,y + j);
-                        data.append(boardTile.traversable ? 1 : 0);
-                    }
-                }
-            }
+        int coordinateCount = inputStream.readInt();
+        ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputStream.readNBytes(coordinateCount * (2 * Integer.BYTES)));
+        ByteBuffer outputByteBuffer = ByteBuffer.allocate(coordinateCount * (2 * Integer.BYTES + 1));
+        while (inputByteBuffer.hasRemaining()) {
+            int x = inputByteBuffer.getInt();
+            int y = inputByteBuffer.getInt();
+            BoardTile boardTile = board.getBoardTile(x,y);
+            outputByteBuffer.putInt(x);
+            outputByteBuffer.putInt(y);
+            outputByteBuffer.put(boardTile.traversable ? (byte) 1 : (byte) 0);
         }
-        outputStream.writeUTF(data.toString());
+        outputStream.write(outputByteBuffer.array());
     }
 
     public void scan() throws IOException {
-        clearMarks();
-        int scanRange = inputStream.readInt();
-        StringBuilder data = new StringBuilder();
-        for(int i = scanRange; i >= -scanRange; i--){
-            if(x + i >= 0 && x + i < board.xSize) {
-                for(int j = scanRange - Math.abs(i); j >= Math.abs(i) - scanRange; j--){
-                    if(y + j >= 0 && y + j < board.ySize) {
-                        BoardTile boardTile = board.getBoardTile(x + i,y + j);
-                        data.append(boardTile.tileEntities.isEmpty() ? 0 : 1);
-                    }
-                }
-            }
-        }
-        outputStream.writeUTF(data.toString());
-    }
-
-    public void scanCircular() throws IOException {
         clearMarks();
         int coordinateCount = inputStream.readInt();
         ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputStream.readNBytes(coordinateCount * (2 * Integer.BYTES)));

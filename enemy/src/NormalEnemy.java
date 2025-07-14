@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 public class NormalEnemy implements Enemy {
@@ -49,21 +50,41 @@ public class NormalEnemy implements Enemy {
 
     }
 
-    public void discover(int size) throws IOException {
-        outputStream.writeUTF("DISCOVER");
-        outputStream.writeInt(size);
-        String data = inputStream.readUTF();
-        int index = 0;
-        for(int i = size; i >= -size; i--){
+    private int findCircleCoordinates(ArrayList<Integer> coordinateArray, int radius) {
+        int coordinateCount = 0;
+        for(int i = radius; i >= -radius; i--){
             if(x + i >= 0 && x + i < board.xSize) {
-                for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
+                int jValue = (int) Math.round(Math.sqrt((Math.pow(radius + 0.5, 2) - Math.pow(i, 2))) - 0.5);
+                for(int j = jValue;
+                    j >= -jValue;
+                    j--){
                     if(y + j >= 0 && y + j < board.ySize) {
-                        boolean traversable = data.charAt(index) == '1';
-                        index++;
-                        board.discoverBoardTile(x + i, y + j, traversable);
+                        coordinateArray.add(x + i);
+                        coordinateArray.add(y + j);
+                        coordinateCount++;
                     }
                 }
             }
+        }
+        return coordinateCount;
+    }
+
+    public void discover(int size) throws IOException {
+        outputStream.writeUTF("DISCOVER");
+        ArrayList<Integer> coordinateArray = new ArrayList<>();
+        int coordinateCount = findCircleCoordinates(coordinateArray, size);
+        ByteBuffer outputByteBuffer = ByteBuffer.allocate(coordinateCount * (2 * Integer.BYTES));
+        for (int coordinate : coordinateArray) {
+            outputByteBuffer.putInt(coordinate);
+        }
+        outputStream.writeInt(coordinateCount);
+        outputStream.write(outputByteBuffer.array());
+        ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputStream.readNBytes(coordinateCount * (2 * Integer.BYTES + 1)));
+        while (inputByteBuffer.hasRemaining()) {
+            int x = inputByteBuffer.getInt();
+            int y = inputByteBuffer.getInt();
+            boolean traversable = inputByteBuffer.get() == (byte) 1;
+            board.discoverBoardTile(x, y, traversable);
         }
     }
 

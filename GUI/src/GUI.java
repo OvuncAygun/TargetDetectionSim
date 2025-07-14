@@ -1,22 +1,26 @@
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Control;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GUI extends Application {
+    public boolean running = true;
+    private Server server;
     private Stage primaryStage;
     private final Group root = new Group();
     private Scene scene;
@@ -32,7 +36,6 @@ public class GUI extends Application {
     private final Map<String, GUIEntity> entityMap = new HashMap<>();
     private final Map<String, GUIMark> markMap = new HashMap<>();
 
-
     public static void main(String[] args) {
         launch(args);
     }
@@ -40,7 +43,7 @@ public class GUI extends Application {
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        Server server = new Server(this);
+        server = new Server(this);
         new Thread(server).start();
     }
 
@@ -93,6 +96,18 @@ public class GUI extends Application {
 
         primaryStage.show();
 
+        EventHandler<WindowEvent> onCloseRequestHandler = new EventHandler<>() {
+            @Override
+            public void handle(WindowEvent windowEvent) {
+                try {
+                    server.stop();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+
+        primaryStage.setOnCloseRequest(onCloseRequestHandler);
     }
 
     public String addEnemy(int x, int y) {
@@ -220,39 +235,6 @@ public class GUI extends Application {
     }
 
     public void drawRange(String entityID) {
-        GUIEntity entity = entityMap.get(entityID);
-        for(int i = 0; i < gridXCount; i++) {
-            for (int j = 0; j < gridYCount; j++) {
-                GUITile guiTile = grid[i][j];
-                guiTile.observerSet.remove(entityID);
-            }
-        }
-        for(int i = entity.scanRange; i >= -entity.scanRange; i--){
-            if(entity.x + i >= 0 && entity.x + i < gridXCount) {
-                for(int j = entity.scanRange - Math.abs(i); j >= Math.abs(i) - entity.scanRange; j--){
-                    if(entity.y + j >= 0 && entity.y + j < gridYCount) {
-                        GUITile guiTile = grid[entity.x + i][entity.y + j];
-                        guiTile.observerSet.add(entityID);
-                    }
-                }
-            }
-        }
-        Platform.runLater(() -> {
-            for(int i = 0; i < gridXCount; i++) {
-                for (int j = 0; j < gridYCount; j++) {
-                    GUITile guiTile = grid[i][j];
-                    if (guiTile.observerSet.isEmpty() && guiTile.node.getFill() == Color.LIGHTBLUE) {
-                        guiTile.node.setFill(Color.WHITESMOKE);
-                    }
-                    else if (!guiTile.observerSet.isEmpty() && guiTile.node.getFill() == Color.WHITESMOKE) {
-                        guiTile.node.setFill(Color.LIGHTBLUE);
-                    }
-                }
-            }
-        });
-    }
-
-    public void drawRangeCircular(String entityID) {
         GUIEntity entity = entityMap.get(entityID);
         for(int i = 0; i < gridXCount; i++) {
             for (int j = 0; j < gridYCount; j++) {

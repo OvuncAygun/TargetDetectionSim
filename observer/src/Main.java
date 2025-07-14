@@ -20,7 +20,7 @@ public class Main {
                 if (i % 10 == 0) {
                     observer.move();
                 }
-                observer.scanCircular();
+                observer.scan();
                 i++;
                 Thread.sleep(100);
             }

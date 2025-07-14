@@ -7,8 +7,6 @@ public interface Observer {
 
     void scan() throws IOException;
 
-    void scanCircular() throws IOException;
-
     void markEntities() throws IOException;
 
     boolean findPath(int x, int y);

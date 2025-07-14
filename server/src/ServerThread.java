@@ -27,7 +27,7 @@ public class ServerThread implements Runnable {
                 default -> throw new IllegalArgumentException("Undefined type received for entity creation");
             };
 
-            while (true) {
+            while (gui.running) {
                 String operation = inputStream.readUTF();
                 switch (operation) {
                     case "MOVE":
@@ -38,9 +38,6 @@ public class ServerThread implements Runnable {
                         break;
                     case "SCAN":
                         entity.scan();
-                        break;
-                    case "SCAN_CIRCULAR":
-                        entity.scanCircular();
                         break;
                     case "MARK":
                         entity.mark();

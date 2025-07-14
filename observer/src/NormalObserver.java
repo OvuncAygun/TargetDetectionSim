@@ -14,7 +14,7 @@ public class NormalObserver implements Observer {
     private int targetX;
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
-    private final static int visionRange = 100;
+    private final static int visionRange = 5;
     private final static int scanRange = 10;
     private final Deque<int[]> path = new ArrayDeque<>();
 
@@ -54,52 +54,11 @@ public class NormalObserver implements Observer {
 
     }
 
-    public void discover(int size) throws IOException {
-        outputStream.writeUTF("DISCOVER");
-        outputStream.writeInt(size);
-        String data = inputStream.readUTF();
-        int index = 0;
-        for(int i = size; i >= -size; i--){
-            if(x + i >= 0 && x + i < board.xSize) {
-                for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
-                    if(y + j >= 0 && y + j < board.ySize) {
-                        boolean traversable = data.charAt(index) == '1';
-                        index++;
-                        board.discoverBoardTile(x + i, y + j, traversable);
-                    }
-                }
-            }
-        }
-    }
-
-    public void scan() throws IOException {
-        outputStream.writeUTF("SCAN");
-        outputStream.writeInt(scanRange);
-        String data = inputStream.readUTF();
-        board.discoveredEntities = new ArrayList<>();
-        int index = 0;
-        for(int i = scanRange; i >= -scanRange; i--){
-            if(x + i >= 0 && x + i < board.xSize) {
-                for(int j = scanRange - Math.abs(i); j >= Math.abs(i) - scanRange; j--){
-                    if(y + j >= 0 && y + j < board.ySize) {
-                        if(data.charAt(index) == '1') {
-                            board.discoveredEntities.add(new int[] {x + i, y + j});
-                        }
-                        index++;
-                    }
-                }
-            }
-        }
-        markEntities();
-    }
-
-    public void scanCircular() throws IOException{
-        outputStream.writeUTF("SCAN_CIRCULAR");
-        ArrayList<Integer> coordinateArray = new ArrayList<Integer>();
+    private int findCircleCoordinates(ArrayList<Integer> coordinateArray, int radius) {
         int coordinateCount = 0;
-        for(int i = scanRange; i >= -scanRange; i--){
+        for(int i = radius; i >= -radius; i--){
             if(x + i >= 0 && x + i < board.xSize) {
-                int jValue = (int) Math.round(Math.sqrt((Math.pow(scanRange + 0.5, 2) - Math.pow(i, 2))) - 0.5);
+                int jValue = (int) Math.round(Math.sqrt((Math.pow(radius + 0.5, 2) - Math.pow(i, 2))) - 0.5);
                 for(int j = jValue;
                     j >= -jValue;
                     j--){
@@ -111,6 +70,32 @@ public class NormalObserver implements Observer {
                 }
             }
         }
+        return coordinateCount;
+    }
+
+    public void discover(int size) throws IOException {
+        outputStream.writeUTF("DISCOVER");
+        ArrayList<Integer> coordinateArray = new ArrayList<>();
+        int coordinateCount = findCircleCoordinates(coordinateArray, size);
+        ByteBuffer outputByteBuffer = ByteBuffer.allocate(coordinateCount * (2 * Integer.BYTES));
+        for (int coordinate : coordinateArray) {
+            outputByteBuffer.putInt(coordinate);
+        }
+        outputStream.writeInt(coordinateCount);
+        outputStream.write(outputByteBuffer.array());
+        ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputStream.readNBytes(coordinateCount * (2 * Integer.BYTES + 1)));
+        while (inputByteBuffer.hasRemaining()) {
+            int x = inputByteBuffer.getInt();
+            int y = inputByteBuffer.getInt();
+            boolean traversable = inputByteBuffer.get() == (byte) 1;
+            board.discoverBoardTile(x, y, traversable);
+        }
+    }
+
+    public void scan() throws IOException{
+        outputStream.writeUTF("SCAN");
+        ArrayList<Integer> coordinateArray = new ArrayList<Integer>();
+        int coordinateCount = findCircleCoordinates(coordinateArray, scanRange);
         ByteBuffer outputByteBuffer = ByteBuffer.allocate(coordinateCount * (2 * Integer.BYTES));
         for (int coordinate : coordinateArray) {
             outputByteBuffer.putInt(coordinate);

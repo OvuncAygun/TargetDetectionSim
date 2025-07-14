@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.ByteBuffer;
 
 public class Enemy implements Entity{
     private final DataInputStream inputStream;
@@ -37,27 +38,22 @@ public class Enemy implements Entity{
     }
 
     public void discover() throws IOException {
-        int size = inputStream.readInt();
-        StringBuilder data = new StringBuilder();
-        for(int i = size; i >= -size; i--){
-            if(x + i >= 0 && x + i < board.xSize) {
-                for(int j = size - Math.abs(i); j >= Math.abs(i) - size; j--){
-                    if(y + j >= 0 && y + j < board.ySize) {
-                        BoardTile boardTile = board.getBoardTile(x + i,y + j);
-                        data.append(boardTile.traversable ? 1 : 0);
-                    }
-                }
-            }
+        int coordinateCount = inputStream.readInt();
+        ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputStream.readNBytes(coordinateCount * (2 * Integer.BYTES)));
+        ByteBuffer outputByteBuffer = ByteBuffer.allocate(coordinateCount * (2 * Integer.BYTES + 1));
+        while (inputByteBuffer.hasRemaining()) {
+            int x = inputByteBuffer.getInt();
+            int y = inputByteBuffer.getInt();
+            BoardTile boardTile = board.getBoardTile(x,y);
+            outputByteBuffer.putInt(x);
+            outputByteBuffer.putInt(y);
+            outputByteBuffer.put(boardTile.traversable ? (byte) 1 : (byte) 0);
         }
-        outputStream.writeUTF(data.toString());
+        outputStream.write(outputByteBuffer.array());
     }
 
     public void scan() throws IOException {
         System.out.println("Enemy does not have \"scan\" method");
-    }
-
-    public void scanCircular() throws IOException {
-        System.out.println("Enemy does not have \"circular scan\" method");
     }
 
     public void mark() throws IOException {

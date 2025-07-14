@@ -6,6 +6,7 @@ public class Server implements Runnable{
     private final static int ySize = 25;
     private final Board board = new Board(xSize, ySize);
     private final GUI gui;
+    private ServerSocket server = null;
 
     public Server(GUI gui) {
         this.gui = gui;
@@ -14,10 +15,9 @@ public class Server implements Runnable{
 
     @Override
     public void run() {
-        ServerSocket server = null;
         try {
             server = new ServerSocket(1111);
-            while (true) {
+            while (gui.running) {
                 Socket client = server.accept();
 
                 ServerThread clientHandler = new ServerThread(client, board, gui);
@@ -35,5 +35,9 @@ public class Server implements Runnable{
                 }
             }
         }
+    }
+
+    public void stop() throws IOException {
+        server.close();
     }
 }
