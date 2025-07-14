@@ -101,6 +101,7 @@ public class GUI extends Application {
             public void handle(WindowEvent windowEvent) {
                 try {
                     server.stop();
+                    running = false;
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

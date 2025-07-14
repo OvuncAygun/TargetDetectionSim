@@ -54,7 +54,6 @@ public class ServerThread implements Runnable {
             else {
                 System.err.println(e.getMessage());
             }
-
         }
         finally {
             if(entity != null) {

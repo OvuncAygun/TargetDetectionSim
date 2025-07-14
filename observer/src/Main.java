@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -15,14 +16,40 @@ public class Main {
             Board board = new Board(xSize, ySize);
             observer = new NormalObserver(inputStream, outputStream, board);
 
-            int i = 0;
-            while (true) {
-                if (i % 10 == 0) {
-                    observer.move();
+            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+            Runnable move = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        observer.move();
+                    }
+                    catch (IOException e) {
+                        System.err.println(e.getMessage());
+                        scheduler.shutdown();
+                    }
                 }
-                observer.scan();
-                i++;
-                Thread.sleep(100);
+            };
+
+            Runnable scan = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        observer.scan();
+                    }
+                    catch (IOException e) {
+                        System.err.println(e.getMessage());
+                        scheduler.shutdown();
+                    }
+                }
+            };
+
+            scheduler.scheduleAtFixedRate(move, 0, 1000, TimeUnit.MILLISECONDS);
+            scheduler.scheduleAtFixedRate(scan, 0, 100, TimeUnit.MILLISECONDS);
+
+            boolean terminated = false;
+            while (!terminated) {
+                terminated = scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
             }
 
 

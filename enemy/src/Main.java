@@ -1,10 +1,11 @@
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.*;
 
 public class Main {
     public static void main(String[] args) {
         Socket socket = null;
-        Enemy enemy;
+
 
         try {
             socket = new Socket("localhost", 1111);
@@ -13,13 +14,29 @@ public class Main {
             int xSize = inputStream.readInt();
             int ySize = inputStream.readInt();
             Board board = new Board(xSize, ySize);
-            enemy = new NormalEnemy(inputStream, outputStream, board);
+            Enemy enemy = new NormalEnemy(inputStream, outputStream, board);
 
-            while (true) {
-                enemy.move();
-                Thread.sleep(100);
+            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+            Runnable move = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        enemy.move();
+                    }
+                    catch (IOException e) {
+                        System.err.println(e.getMessage());
+                        scheduler.shutdown();
+                    }
+                }
+            };
+
+            scheduler.scheduleAtFixedRate(move, 0, 100, TimeUnit.MILLISECONDS);
+
+            boolean terminated = false;
+            while (!terminated) {
+                terminated = scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
             }
-
 
         }
         catch (IOException e) {

@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.*;
 
 public class Server implements Runnable{
     private final static int xSize = 25;
@@ -7,10 +8,18 @@ public class Server implements Runnable{
     private final Board board = new Board(xSize, ySize);
     private final GUI gui;
     private ServerSocket server = null;
+    private final ExecutorService executorService;
 
     public Server(GUI gui) {
         this.gui = gui;
         gui.initialize(1000, 1000, xSize, ySize);
+        ThreadFactory threadFactory = new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r);
+            }
+        };
+        executorService = Executors.newThreadPerTaskExecutor(threadFactory);
     }
 
     @Override
@@ -22,7 +31,7 @@ public class Server implements Runnable{
 
                 ServerThread clientHandler = new ServerThread(client, board, gui);
 
-                new Thread(clientHandler).start();
+                executorService.submit(clientHandler);
             }
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -39,5 +48,6 @@ public class Server implements Runnable{
 
     public void stop() throws IOException {
         server.close();
+        executorService.shutdownNow();
     }
 }
