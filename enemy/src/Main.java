@@ -18,20 +18,17 @@ public class Main {
 
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-            Runnable move = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        enemy.move();
-                    }
-                    catch (IOException e) {
-                        System.err.println(e.getMessage());
-                        scheduler.shutdown();
-                    }
+            Runnable move = () -> {
+                try {
+                    enemy.move();
+                }
+                catch (IOException e) {
+                    System.err.println(e.getMessage());
+                    scheduler.shutdown();
                 }
             };
 
-            scheduler.scheduleAtFixedRate(move, 0, 100, TimeUnit.MILLISECONDS);
+            scheduler.scheduleAtFixedRate(move, 500, 500, TimeUnit.MILLISECONDS);
 
             boolean terminated = false;
             while (!terminated) {
