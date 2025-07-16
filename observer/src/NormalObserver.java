@@ -9,6 +9,7 @@ public class NormalObserver implements Observer {
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
     private final Board board;
+    private String id;
     private int x;
     private int y;
     private int targetX;
@@ -23,7 +24,6 @@ public class NormalObserver implements Observer {
         this.outputStream = outputStream;
         this.board = board;
         outputStream.writeUTF("observer");
-        outputStream.writeUTF("observerName");
         do {
             x = random.nextInt(0, board.xSize);
             y = random.nextInt(0, board.ySize);
@@ -32,6 +32,7 @@ public class NormalObserver implements Observer {
         }
         while (!inputStream.readBoolean());
         outputStream.writeInt(scanRange);
+        this.id = inputStream.readUTF().substring("observer-".length());
     }
 
     public void move() throws IOException {
@@ -39,9 +40,9 @@ public class NormalObserver implements Observer {
         outputStream.writeUTF("MOVE");
         if(path.isEmpty()) {
             do {
-                int[] target = board.discoveredTiles.get(random.nextInt(0, board.discoveredTiles.size()));
-                targetX = target[0];
-                targetY = target[1];
+                BoardTile target = board.discoveredTiles.get(random.nextInt(0, board.discoveredTiles.size()));
+                targetX = target.x;
+                targetY = target.y;
             }
             while (!findPath(targetX, targetY));
         }
@@ -50,8 +51,48 @@ public class NormalObserver implements Observer {
         y = movement[1];
         outputStream.writeInt(x);
         outputStream.writeInt(y);
+    }
 
-
+    public boolean findPath(int targetX, int targetY) {
+        Queue<Point> queue = new ArrayDeque<>();
+        Set<Point> visited = new HashSet<>();
+        Map<Point, Point> pathMap = new HashMap<>();
+        Point currentPoint = new Point(x, y);
+        queue.add(currentPoint);
+        visited.add(currentPoint);
+        while(!queue.isEmpty()) {
+            currentPoint = queue.remove();
+            Point point = new Point(currentPoint.x + 1, currentPoint.y);
+            if(currentPoint.x + 1 < board.xSize && board.getBoardTile(currentPoint.x + 1, currentPoint.y).traversable && !visited.contains(point)) {
+                queue.add(point);
+                visited.add(point);
+                pathMap.put(point, currentPoint);
+            }
+            point = new Point(currentPoint.x, currentPoint.y + 1);
+            if(currentPoint.y + 1 < board.ySize && board.getBoardTile(currentPoint.x, currentPoint.y + 1).traversable && !visited.contains(point)) {
+                queue.add(point);
+                visited.add(point);
+                pathMap.put(point, currentPoint);
+            }
+            point = new Point(currentPoint.x - 1, currentPoint.y);
+            if(currentPoint.x - 1 >= 0 && board.getBoardTile(currentPoint.x - 1, currentPoint.y).traversable && !visited.contains(point)) {
+                queue.add(point);
+                visited.add(point);
+                pathMap.put(point, currentPoint);
+            }
+            point = new Point(currentPoint.x, currentPoint.y - 1);
+            if(currentPoint.y - 1 >= 0 && board.getBoardTile(currentPoint.x, currentPoint.y - 1).traversable && !visited.contains(point)) {
+                queue.add(point);
+                visited.add(point);
+                pathMap.put(point, currentPoint);
+            }
+        }
+        Point pathPoint = new Point(targetX, targetY);
+        while(pathMap.containsKey(pathPoint)) {
+            path.addFirst(new int[] {pathPoint.x, pathPoint.y});
+            pathPoint = pathMap.get(pathPoint);
+        }
+        return pathMap.containsKey(new Point(targetX, targetY));
     }
 
     private int findCircleCoordinates(ArrayList<Integer> coordinateArray, int radius) {
@@ -104,65 +145,65 @@ public class NormalObserver implements Observer {
         outputStream.write(outputByteBuffer.array());
 
         ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputStream.readNBytes(coordinateCount * (2 * Integer.BYTES + 1)));
-        board.discoveredEntities = new ArrayList<>();
         while (inputByteBuffer.hasRemaining()) {
             int x = inputByteBuffer.getInt();
             int y = inputByteBuffer.getInt();
-            boolean enemyExists = inputByteBuffer.get() == (byte) 1;
-            if (enemyExists) {
-                board.discoveredEntities.add(new int[] {x, y});
+            boolean entityExists = inputByteBuffer.get() == (byte) 1;
+            if (entityExists) {
+                board.discoveredEntities.add(new DiscoveredEntity(x, y));
             }
         }
+        identify();
         markEntities();
     }
 
-    public void markEntities() throws IOException {
-        for (int[] entity : board.discoveredEntities) {
-            outputStream.writeUTF("MARK");
-            outputStream.writeInt(entity[0]);
-            outputStream.writeInt(entity[1]);
+    private void markEntities() throws IOException {
+        for (DiscoveredEntity entity : board.discoveredEntities) {
+            if (entity.lostCounter == 0) {
+                outputStream.writeUTF("MARK");
+                outputStream.writeUTF(entity.id);
+                outputStream.writeInt(entity.x);
+                outputStream.writeInt(entity.y);
+            }
         }
     }
 
-    public boolean findPath(int targetX, int targetY) {
-        Queue<Point> queue = new ArrayDeque<>();
-        Set<Point> visited = new HashSet<>();
-        Map<Point, Point> pathMap = new HashMap<>();
-        Point currentPoint = new Point(x, y);
-        queue.add(currentPoint);
-        visited.add(currentPoint);
-        while(!queue.isEmpty()) {
-            currentPoint = queue.remove();
-            Point point = new Point(currentPoint.x + 1, currentPoint.y);
-            if(currentPoint.x + 1 < board.xSize && board.getBoardTile(currentPoint.x + 1, currentPoint.y).traversable && !visited.contains(point)) {
-                queue.add(point);
-                visited.add(point);
-                pathMap.put(point, currentPoint);
+    private void identify() throws IOException {
+        Iterator<DiscoveredEntity> entityIterator = board.discoveredEntities.iterator();
+        while (entityIterator.hasNext()) {
+            DiscoveredEntity entity = entityIterator.next();
+            if (!entity.identified) {
+                boolean identified = false;
+                for (DiscoveredEntity otherEntity : board.discoveredEntities) {
+                    if (otherEntity.identified) {
+                        if ((entity.x == otherEntity.x && entity.y == otherEntity.y) ||
+                                (entity.x == otherEntity.x + 1 && entity.y == otherEntity.y) ||
+                                (entity.x == otherEntity.x - 1 && entity.y == otherEntity.y) ||
+                                (entity.x == otherEntity.x && entity.y == otherEntity.y + 1) ||
+                                (entity.x == otherEntity.x && entity.y == otherEntity.y - 1)) {
+                            otherEntity.updateCoordinate(entity.x, entity.y);
+                            otherEntity.lostCounter = 0;
+                            entityIterator.remove();
+                            board.discoveredEntities.remove(entity);
+                            identified = true;
+                            break;
+                        }
+                    }
+                }
+                if (!identified) {
+                    entity.identified = true;
+                    entity.id = "%s-%d".formatted(id, board.identificationCounter++);
+                }
             }
-            point = new Point(currentPoint.x, currentPoint.y + 1);
-            if(currentPoint.y + 1 < board.ySize && board.getBoardTile(currentPoint.x, currentPoint.y + 1).traversable && !visited.contains(point)) {
-                queue.add(point);
-                visited.add(point);
-                pathMap.put(point, currentPoint);
-            }
-            point = new Point(currentPoint.x - 1, currentPoint.y);
-            if(currentPoint.x - 1 >= 0 && board.getBoardTile(currentPoint.x - 1, currentPoint.y).traversable && !visited.contains(point)) {
-                queue.add(point);
-                visited.add(point);
-                pathMap.put(point, currentPoint);
-            }
-            point = new Point(currentPoint.x, currentPoint.y - 1);
-            if(currentPoint.y - 1 >= 0 && board.getBoardTile(currentPoint.x, currentPoint.y - 1).traversable && !visited.contains(point)) {
-                queue.add(point);
-                visited.add(point);
-                pathMap.put(point, currentPoint);
+            else {
+                if(entity.lostCounter > 10) {
+                    entityIterator.remove();
+                    board.discoveredEntities.remove(entity);
+                }
+                else {
+                    entity.lostCounter++;
+                }
             }
         }
-        Point pathPoint = new Point(targetX, targetY);
-        while(pathMap.containsKey(pathPoint)) {
-            path.addFirst(new int[] {pathPoint.x, pathPoint.y});
-            pathPoint = pathMap.get(pathPoint);
-        }
-        return pathMap.containsKey(new Point(targetX, targetY));
     }
 }

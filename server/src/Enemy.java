@@ -16,7 +16,6 @@ public class Enemy implements Entity{
         this.outputStream = outputStream;
         this.board = board;
         this.gui = gui;
-        this.name = inputStream.readUTF();
         this.x = inputStream.readInt();
         this.y = inputStream.readInt();
         while (!board.getBoardTile(x, y).traversable){
@@ -27,6 +26,7 @@ public class Enemy implements Entity{
         outputStream.writeBoolean(true);
         board.getBoardTile(x, y).tileEntities.add(this);
         this.guiID = gui.addEnemy(x, y);
+        outputStream.writeUTF(this.guiID);
     }
 
     public void move() throws IOException {

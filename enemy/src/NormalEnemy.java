@@ -7,6 +7,7 @@ public class NormalEnemy implements Enemy {
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
     private final Board board;
+    private String id;
     private int x;
     private int y;
     private int targetX;
@@ -20,7 +21,6 @@ public class NormalEnemy implements Enemy {
         this.outputStream = outputStream;
         this.board = board;
         outputStream.writeUTF("enemy");
-        outputStream.writeUTF("enemyName");
         do {
             x = random.nextInt(0, board.xSize);
             y = random.nextInt(0, board.ySize);
@@ -28,6 +28,7 @@ public class NormalEnemy implements Enemy {
             outputStream.writeInt(y);
         }
         while (!inputStream.readBoolean());
+        this.id = inputStream.readUTF();
     }
 
     public void move() throws IOException {

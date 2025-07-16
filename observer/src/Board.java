@@ -4,8 +4,9 @@ public class Board {
     public int xSize;
     public int ySize;
     public BoardTile[][] boardTiles;
-    public ArrayList<int[]> discoveredTiles = new ArrayList<>();
-    public ArrayList<int[]> discoveredEntities = new ArrayList<>();
+    public ArrayList<BoardTile> discoveredTiles = new ArrayList<>();
+    public ArrayList<DiscoveredEntity> discoveredEntities = new ArrayList<>();
+    public int identificationCounter = 0;
 
     public Board(int xSize, int ySize) {
         this.xSize = xSize;
@@ -14,7 +15,6 @@ public class Board {
         for(int i = 0; i < xSize; i++) {
             for(int j = 0; j < ySize; j++) {
                 boardTiles[i][j] = new BoardTile(i, j);
-
             }
         }
     }
@@ -27,7 +27,7 @@ public class Board {
         BoardTile boardTile = boardTiles[x][y];
         boardTile.discovered = true;
         boardTile.traversable = traversable;
-        discoveredTiles.add(new int[] {x, y});
+        discoveredTiles.add(boardTile);
     }
 
 

@@ -1,8 +1,8 @@
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
+import javafx.geometry.VPos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.layout.*;
@@ -10,9 +10,15 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextBoundsType;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -198,14 +204,17 @@ public class GUI extends Application {
                 guiMark.group.getChildren().remove(guiMark.node);
                 guiMark.node.widthProperty().unbind();
                 guiMark.node.heightProperty().unbind();
+                guiMark.group.getChildren().remove(guiMark.text);
+                guiMark.text.wrappingWidthProperty().unbind();
+                guiMark.text.yProperty().unbind();
                 markMap.remove(guiMark.id);
             }
         });
     }
 
-    public String markEntity(String entityID, int x, int y) {
+    public String markEntity(String markerID, String entityID, int x, int y) {
         GUITile guiTile = grid[x][y];
-        String id = entityID + "-" + idCounter.getAndIncrement();
+        String id = markerID + "-" + idCounter.getAndIncrement();
         Rectangle mark = new Rectangle();
         mark.setId(id);
         mark.setStrokeType(StrokeType.INSIDE);
@@ -213,14 +222,24 @@ public class GUI extends Application {
         mark.setStroke(Color.BLUE);
         mark.setStrokeWidth(1.5);
         mark.setManaged(false);
-        GUIMark guiMark = new GUIMark(id, mark, x, y, entityID, guiTile.markLayer);
+        Text text = new Text(entityID);
+        text.setStyle("-fx-font-weight: bold");
+        text.setFill(Color.WHITE);
+        text.setTextAlignment(TextAlignment.CENTER);
+        text.setTextOrigin(VPos.CENTER);
+        text.setManaged(false);
+        text.setBoundsType(TextBoundsType.LOGICAL_VERTICAL_CENTER);
+        GUIMark guiMark = new GUIMark(id, mark, text, x, y, markerID, guiTile.markLayer);
         markMap.put(id, guiMark);
-        GUIEntity guiEntity = entityMap.get(entityID);
+        GUIEntity guiEntity = entityMap.get(markerID);
         guiEntity.markList.add(guiMark);
         Platform.runLater(() -> {
             guiMark.node.widthProperty().bind(guiTile.stackPane.widthProperty());
             guiMark.node.heightProperty().bind(guiTile.stackPane.heightProperty());
             guiMark.group.getChildren().add(guiMark.node);
+            guiMark.text.wrappingWidthProperty().bind(guiTile.stackPane.widthProperty());
+            guiMark.text.yProperty().bind(guiTile.stackPane.heightProperty().divide(2));
+            guiMark.group.getChildren().add(guiMark.text);
         });
         return id;
     }
@@ -231,6 +250,9 @@ public class GUI extends Application {
             guiMark.group.getChildren().remove(guiMark.node);
             guiMark.node.widthProperty().unbind();
             guiMark.node.heightProperty().unbind();
+            guiMark.group.getChildren().remove(guiMark.text);
+            guiMark.text.wrappingWidthProperty().unbind();
+            guiMark.text.yProperty().unbind();
         });
         markMap.remove(markID);
     }

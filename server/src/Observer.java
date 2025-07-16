@@ -21,7 +21,6 @@ public class Observer implements Entity{
         this.outputStream = outputStream;
         this.board = board;
         this.gui = gui;
-        this.name = inputStream.readUTF();
         this.x = inputStream.readInt();
         this.y = inputStream.readInt();
         while (!board.getBoardTile(x, y).traversable){
@@ -33,6 +32,7 @@ public class Observer implements Entity{
         int scanRange = inputStream.readInt();
         board.getBoardTile(x, y).tileEntities.add(this);
         this.guiID = gui.addObserver(x, y, scanRange);
+        outputStream.writeUTF(this.guiID);
         gui.drawRange(guiID);
     }
 
@@ -77,9 +77,10 @@ public class Observer implements Entity{
     }
 
     public void mark() throws IOException {
+        String entityID = inputStream.readUTF();
         int x = inputStream.readInt();
         int y = inputStream.readInt();
-        markIDSet.add(gui.markEntity(guiID, x, y));
+        markIDSet.add(gui.markEntity(guiID, entityID, x, y));
     }
 
     public void clearMarks() {
