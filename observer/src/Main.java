@@ -22,7 +22,7 @@ public class Main {
                 try {
                     observer.move();
                 }
-                catch (IOException e) {
+                catch (Exception e) {
                     System.err.println(e.getMessage());
                     scheduler.shutdown();
                 }
@@ -32,7 +32,7 @@ public class Main {
                 try {
                     observer.scan();
                 }
-                catch (IOException e) {
+                catch (Exception e) {
                     System.err.println(e.getMessage());
                     scheduler.shutdown();
                 }
@@ -62,21 +62,5 @@ public class Main {
                 }
             }
         }
-    }
-
-    private static Runnable getRunnable(Observer observer, ScheduledExecutorService scheduler) {
-        return new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    observer.move();
-                    observer.scan();
-                }
-                catch (IOException e) {
-                    System.err.println(e.getMessage());
-                    scheduler.shutdown();
-                }
-            }
-        };
     }
 }

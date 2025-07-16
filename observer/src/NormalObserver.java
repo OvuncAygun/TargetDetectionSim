@@ -16,7 +16,7 @@ public class NormalObserver implements Observer {
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
     private final static int visionRange = 5;
-    private final static int scanRange = 10;
+    private final static int scanRange = 5;
     private final Deque<int[]> path = new ArrayDeque<>();
 
     public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
@@ -165,44 +165,88 @@ public class NormalObserver implements Observer {
                 outputStream.writeInt(entity.x);
                 outputStream.writeInt(entity.y);
             }
+            else {
+                outputStream.writeUTF("MARK");
+                outputStream.writeUTF(entity.id + "?");
+                outputStream.writeInt(entity.x);
+                outputStream.writeInt(entity.y);
+            }
         }
     }
 
-    private void identify() throws IOException {
+    private void identify() {
         Iterator<DiscoveredEntity> entityIterator = board.discoveredEntities.iterator();
+        HashMap<DiscoveredEntity, EntityProbabilityMap> entityProbabilityMapMap = new HashMap<>();
         while (entityIterator.hasNext()) {
             DiscoveredEntity entity = entityIterator.next();
-            if (!entity.identified) {
-                boolean identified = false;
-                for (DiscoveredEntity otherEntity : board.discoveredEntities) {
-                    if (otherEntity.identified) {
-                        if ((entity.x == otherEntity.x && entity.y == otherEntity.y) ||
-                                (entity.x == otherEntity.x + 1 && entity.y == otherEntity.y) ||
-                                (entity.x == otherEntity.x - 1 && entity.y == otherEntity.y) ||
-                                (entity.x == otherEntity.x && entity.y == otherEntity.y + 1) ||
-                                (entity.x == otherEntity.x && entity.y == otherEntity.y - 1)) {
-                            otherEntity.updateCoordinate(entity.x, entity.y);
-                            otherEntity.lostCounter = 0;
-                            entityIterator.remove();
-                            board.discoveredEntities.remove(entity);
-                            identified = true;
-                            break;
+            if (entity.identified) {
+                EntityProbabilityMap entityProbabilityMap = new EntityProbabilityMap();
+                entityProbabilityMapMap.put(entity, entityProbabilityMap);
+                for (DiscoveredEntity unidentifiedEntity : board.discoveredEntities) {
+                    if (!unidentifiedEntity.identified && !unidentifiedEntity.removeMark) {
+                        if (entity.x == unidentifiedEntity.x && entity.y == unidentifiedEntity.y) {
+                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("stay"));
+                        }
+                        else if (entity.x == unidentifiedEntity.x + 1 && entity.y == unidentifiedEntity.y) {
+                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("right"));
+                        }
+                        else if (entity.x == unidentifiedEntity.x - 1 && entity.y == unidentifiedEntity.y) {
+                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("left"));
+                        }
+                        else if (entity.x == unidentifiedEntity.x && entity.y == unidentifiedEntity.y + 1) {
+                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("up"));
+                        }
+                        else if (entity.x == unidentifiedEntity.x && entity.y == unidentifiedEntity.y - 1) {
+                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("down"));
                         }
                     }
                 }
-                if (!identified) {
-                    entity.identified = true;
-                    entity.id = "%s-%d".formatted(id, board.identificationCounter++);
+                entityProbabilityMap.calculateHighestProbability();
+            }
+        }
+        while (!entityProbabilityMapMap.isEmpty()) {
+            int highestProbability = Integer.MIN_VALUE;
+            DiscoveredEntity entity = null;
+            EntityProbabilityMap entityProbabilityMap = null;
+            for (Map.Entry<DiscoveredEntity, EntityProbabilityMap> entry : entityProbabilityMapMap.entrySet())
+            {
+                if (entry.getValue().highestProbability > highestProbability) {
+                    entity = entry.getKey();
+                    entityProbabilityMap = entry.getValue();
+                }
+            }
+            if (entity == null) {
+                entityProbabilityMapMap.clear();
+                continue;
+            }
+            if (!entityProbabilityMap.hashMap.isEmpty()) {
+                entity.updateCoordinate(entityProbabilityMap.highestProbabilityEntity.x, entityProbabilityMap.highestProbabilityEntity.y);
+                entityProbabilityMap.highestProbabilityEntity.removeMark = true;
+                for (Map.Entry<DiscoveredEntity, EntityProbabilityMap> entry : entityProbabilityMapMap.entrySet())
+                {
+                    entry.getValue().calculateHighestProbability();
                 }
             }
             else {
-                if(entity.lostCounter > 10) {
-                    entityIterator.remove();
-                    board.discoveredEntities.remove(entity);
+                if (entity.lostCounter > 10) {
+                    entity.removeMark = true;
                 }
                 else {
                     entity.lostCounter++;
                 }
+            }
+            entityProbabilityMapMap.remove(entity);
+        }
+        entityIterator = board.discoveredEntities.iterator();
+        while (entityIterator.hasNext()) {
+            DiscoveredEntity entity = entityIterator.next();
+            if(entity.removeMark) {
+                entityIterator.remove();
+            }
+            else if(!entity.identified) {
+                entity.id = "%s-%d".formatted(id, board.identificationCounter);
+                board.identificationCounter++;
+                entity.identified = true;
             }
         }
     }
