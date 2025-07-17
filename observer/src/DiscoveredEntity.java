@@ -50,9 +50,9 @@ public class DiscoveredEntity {
                     yProbability = 2 * (coordinateQueue.get(1)[1] - coordinateQueue.get(0)[1]);
                     break;
                 case 3:
-                    xProbability = 2 * (coordinateQueue.get(2)[0] - coordinateQueue.get(1)[0]) +
+                    xProbability = (coordinateQueue.get(2)[0] - coordinateQueue.get(1)[0]) +
                             (coordinateQueue.get(1)[0] - coordinateQueue.get(0)[0]);
-                    yProbability = 2 * (coordinateQueue.get(2)[1] - coordinateQueue.get(1)[1]) +
+                    yProbability = (coordinateQueue.get(2)[1] - coordinateQueue.get(1)[1]) +
                             (coordinateQueue.get(1)[1] - coordinateQueue.get(0)[1]);
                     break;
             }
@@ -62,16 +62,7 @@ public class DiscoveredEntity {
             probabilityMap.put("down", yProbability);
             probabilityMap.put("stay", 10);
 
-            try {
-                String str = probabilityMap.toString();
-                BufferedWriter writer = new BufferedWriter(new FileWriter("%s\\%s.txt".formatted(
-                        new File("observer/test").getAbsolutePath(), id), true));
-                writer.append("%s\n".formatted(str));
-                writer.close();
-            }
-            catch (IOException e) {
-                System.err.println(e.getMessage());
-            }
+            System.out.println(id + ":" + probabilityMap);
         }
     }
 }

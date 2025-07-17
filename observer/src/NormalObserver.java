@@ -159,15 +159,23 @@ public class NormalObserver implements Observer {
 
     private void markEntities() throws IOException {
         for (DiscoveredEntity entity : board.discoveredEntities) {
-            if (entity.lostCounter == 0) {
-                outputStream.writeUTF("MARK");
-                outputStream.writeUTF(entity.id);
-                outputStream.writeInt(entity.x);
-                outputStream.writeInt(entity.y);
+            if (entity.identified) {
+                if (entity.lostCounter == 0) {
+                    outputStream.writeUTF("MARK");
+                    outputStream.writeUTF(entity.id);
+                    outputStream.writeInt(entity.x);
+                    outputStream.writeInt(entity.y);
+                }
+                else {
+                    outputStream.writeUTF("MARK");
+                    outputStream.writeUTF(entity.id + "?");
+                    outputStream.writeInt(entity.x);
+                    outputStream.writeInt(entity.y);
+                }
             }
             else {
                 outputStream.writeUTF("MARK");
-                outputStream.writeUTF(entity.id + "?");
+                outputStream.writeUTF("?");
                 outputStream.writeInt(entity.x);
                 outputStream.writeInt(entity.y);
             }
@@ -194,10 +202,10 @@ public class NormalObserver implements Observer {
                             entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("left"));
                         }
                         else if (entity.x == unidentifiedEntity.x && entity.y == unidentifiedEntity.y + 1) {
-                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("up"));
+                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("down"));
                         }
                         else if (entity.x == unidentifiedEntity.x && entity.y == unidentifiedEntity.y - 1) {
-                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("down"));
+                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("up"));
                         }
                     }
                 }
@@ -216,10 +224,12 @@ public class NormalObserver implements Observer {
                 }
             }
             if (entity == null) {
-                entityProbabilityMapMap.clear();
-                continue;
+                Map.Entry<DiscoveredEntity, EntityProbabilityMap> entry =
+                        entityProbabilityMapMap.entrySet().iterator().next();
+                entity = entry.getKey();
+                entityProbabilityMap = entry.getValue();
             }
-            if (!entityProbabilityMap.hashMap.isEmpty()) {
+            if (entityProbabilityMap.highestProbabilityEntity != null) {
                 entity.updateCoordinate(entityProbabilityMap.highestProbabilityEntity.x, entityProbabilityMap.highestProbabilityEntity.y);
                 entityProbabilityMap.highestProbabilityEntity.removeMark = true;
                 for (Map.Entry<DiscoveredEntity, EntityProbabilityMap> entry : entityProbabilityMapMap.entrySet())
