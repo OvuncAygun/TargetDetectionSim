@@ -3,8 +3,8 @@ import java.net.*;
 import java.util.concurrent.*;
 
 public class Server implements Runnable{
-    private final static int xSize = 5;
-    private final static int ySize = 5;
+    private final static int xSize = 25;
+    private final static int ySize = 25;
     private final Board board = new Board(xSize, ySize);
     private final GUI gui;
     private ServerSocket server = null;

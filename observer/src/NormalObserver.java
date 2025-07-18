@@ -15,8 +15,8 @@ public class NormalObserver implements Observer {
     private int targetX;
     private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
-    private final static int visionRange = 5;
-    private final static int scanRange = 5;
+    private final static int visionRange = 20;
+    private final static int scanRange = 10;
     private final Deque<int[]> path = new ArrayDeque<>();
 
     public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
@@ -153,7 +153,7 @@ public class NormalObserver implements Observer {
                 board.discoveredEntities.add(new DiscoveredEntity(x, y));
             }
         }
-        identify();
+        identify2();
         markEntities();
     }
 
@@ -212,6 +212,13 @@ public class NormalObserver implements Observer {
                 entityProbabilityMap.calculateHighestProbability();
             }
         }
+        EntityProbabilityArray entityProbabilityArray =
+                new EntityProbabilityArray(board, id, entityProbabilityMapMap);
+
+        entityProbabilityArray.normalize();
+
+        entityProbabilityArray.findLines();
+
         while (!entityProbabilityMapMap.isEmpty()) {
             int highestProbability = Integer.MIN_VALUE;
             DiscoveredEntity entity = null;
@@ -259,5 +266,49 @@ public class NormalObserver implements Observer {
                 entity.identified = true;
             }
         }
+    }
+
+    private void identify2() {
+        Iterator<DiscoveredEntity> entityIterator = board.discoveredEntities.iterator();
+        HashMap<DiscoveredEntity, EntityProbabilityMap> entityProbabilityMapMap = new HashMap<>();
+        while (entityIterator.hasNext()) {
+            DiscoveredEntity entity = entityIterator.next();
+            if (entity.identified) {
+                EntityProbabilityMap entityProbabilityMap = new EntityProbabilityMap();
+                entityProbabilityMapMap.put(entity, entityProbabilityMap);
+                for (DiscoveredEntity unidentifiedEntity : board.discoveredEntities) {
+                    if (!unidentifiedEntity.identified && !unidentifiedEntity.removeMark) {
+                        for (int i = -2; i <= 2; i++) {
+                            for (int j = Math.abs(i) - 2; j <= 2 - Math.abs(i); j++) {
+                                if(entity.x == unidentifiedEntity.x + i && entity.y == unidentifiedEntity.y + j) {
+                                    entityProbabilityMap.hashMap.put(unidentifiedEntity,
+                                            entity.getProbability(i, j));
+                                }
+                            }
+                        }
+                    }
+                }
+                entityProbabilityMap.calculateHighestProbability();
+            }
+        }
+        EntityProbabilityArray entityProbabilityArray =
+                new EntityProbabilityArray(board, id, entityProbabilityMapMap);
+
+        entityProbabilityArray.normalize();
+
+        entityProbabilityArray.findLines();
+
+        entityProbabilityArray.matchEntities();
+
+        entityIterator = board.discoveredEntities.iterator();
+        while (entityIterator.hasNext()) {
+            DiscoveredEntity entity = entityIterator.next();
+            if(entity.removeMark) {
+                entityIterator.remove();
+                continue;
+            }
+            System.out.printf("%s, %d\t".formatted(entity.id, entity.lostCounter));
+        }
+        System.out.println();
     }
 }
