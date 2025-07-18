@@ -14,9 +14,9 @@ public class Main {
             int xSize = inputStream.readInt();
             int ySize = inputStream.readInt();
             Board board = new Board(xSize, ySize);
-            observer = new NormalObserver(inputStream, outputStream, board);
-
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+            observer = new NormalObserver(inputStream, outputStream, board, scheduler);
+
 
             Runnable move = () -> {
                 try {

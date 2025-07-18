@@ -4,25 +4,26 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class NormalObserver implements Observer {
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
     private final Board board;
-    private String id;
+    private final ScheduledExecutorService scheduler;
+    private final String id;
     private int x;
     private int y;
-    private int targetX;
-    private int targetY;
     private final Random random = new Random(System.currentTimeMillis());
     private final static int visionRange = 20;
     private final static int scanRange = 10;
     private final Deque<int[]> path = new ArrayDeque<>();
 
-    public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board) throws IOException {
+    public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board, ScheduledExecutorService scheduler) throws IOException {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.board = board;
+        this.scheduler = scheduler;
         outputStream.writeUTF("observer");
         do {
             x = random.nextInt(0, board.xSize);
@@ -39,6 +40,8 @@ public class NormalObserver implements Observer {
         this.discover(visionRange);
         outputStream.writeUTF("MOVE");
         if(path.isEmpty()) {
+            int targetX;
+            int targetY;
             do {
                 BoardTile target = board.discoveredTiles.get(random.nextInt(0, board.discoveredTiles.size()));
                 targetX = target.x;
@@ -153,7 +156,7 @@ public class NormalObserver implements Observer {
                 board.discoveredEntities.add(new DiscoveredEntity(x, y));
             }
         }
-        identify2();
+        identify();
         markEntities();
     }
 
@@ -165,6 +168,7 @@ public class NormalObserver implements Observer {
                     outputStream.writeUTF(entity.id);
                     outputStream.writeInt(entity.x);
                     outputStream.writeInt(entity.y);
+
                 }
                 else {
                     outputStream.writeUTF("MARK");
@@ -183,92 +187,6 @@ public class NormalObserver implements Observer {
     }
 
     private void identify() {
-        Iterator<DiscoveredEntity> entityIterator = board.discoveredEntities.iterator();
-        HashMap<DiscoveredEntity, EntityProbabilityMap> entityProbabilityMapMap = new HashMap<>();
-        while (entityIterator.hasNext()) {
-            DiscoveredEntity entity = entityIterator.next();
-            if (entity.identified) {
-                EntityProbabilityMap entityProbabilityMap = new EntityProbabilityMap();
-                entityProbabilityMapMap.put(entity, entityProbabilityMap);
-                for (DiscoveredEntity unidentifiedEntity : board.discoveredEntities) {
-                    if (!unidentifiedEntity.identified && !unidentifiedEntity.removeMark) {
-                        if (entity.x == unidentifiedEntity.x && entity.y == unidentifiedEntity.y) {
-                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("stay"));
-                        }
-                        else if (entity.x == unidentifiedEntity.x + 1 && entity.y == unidentifiedEntity.y) {
-                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("right"));
-                        }
-                        else if (entity.x == unidentifiedEntity.x - 1 && entity.y == unidentifiedEntity.y) {
-                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("left"));
-                        }
-                        else if (entity.x == unidentifiedEntity.x && entity.y == unidentifiedEntity.y + 1) {
-                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("down"));
-                        }
-                        else if (entity.x == unidentifiedEntity.x && entity.y == unidentifiedEntity.y - 1) {
-                            entityProbabilityMap.hashMap.put(unidentifiedEntity, entity.probabilityMap.get("up"));
-                        }
-                    }
-                }
-                entityProbabilityMap.calculateHighestProbability();
-            }
-        }
-        EntityProbabilityArray entityProbabilityArray =
-                new EntityProbabilityArray(board, id, entityProbabilityMapMap);
-
-        entityProbabilityArray.normalize();
-
-        entityProbabilityArray.findLines();
-
-        while (!entityProbabilityMapMap.isEmpty()) {
-            int highestProbability = Integer.MIN_VALUE;
-            DiscoveredEntity entity = null;
-            EntityProbabilityMap entityProbabilityMap = null;
-            for (Map.Entry<DiscoveredEntity, EntityProbabilityMap> entry : entityProbabilityMapMap.entrySet())
-            {
-                if (entry.getValue().highestProbability > highestProbability) {
-                    entity = entry.getKey();
-                    entityProbabilityMap = entry.getValue();
-                }
-            }
-            if (entity == null) {
-                Map.Entry<DiscoveredEntity, EntityProbabilityMap> entry =
-                        entityProbabilityMapMap.entrySet().iterator().next();
-                entity = entry.getKey();
-                entityProbabilityMap = entry.getValue();
-            }
-            if (entityProbabilityMap.highestProbabilityEntity != null) {
-                entity.updateCoordinate(entityProbabilityMap.highestProbabilityEntity.x, entityProbabilityMap.highestProbabilityEntity.y);
-                entityProbabilityMap.highestProbabilityEntity.removeMark = true;
-                for (Map.Entry<DiscoveredEntity, EntityProbabilityMap> entry : entityProbabilityMapMap.entrySet())
-                {
-                    entry.getValue().calculateHighestProbability();
-                }
-            }
-            else {
-                if (entity.lostCounter > 10) {
-                    entity.removeMark = true;
-                }
-                else {
-                    entity.lostCounter++;
-                }
-            }
-            entityProbabilityMapMap.remove(entity);
-        }
-        entityIterator = board.discoveredEntities.iterator();
-        while (entityIterator.hasNext()) {
-            DiscoveredEntity entity = entityIterator.next();
-            if(entity.removeMark) {
-                entityIterator.remove();
-            }
-            else if(!entity.identified) {
-                entity.id = "%s-%d".formatted(id, board.identificationCounter);
-                board.identificationCounter++;
-                entity.identified = true;
-            }
-        }
-    }
-
-    private void identify2() {
         Iterator<DiscoveredEntity> entityIterator = board.discoveredEntities.iterator();
         HashMap<DiscoveredEntity, EntityProbabilityMap> entityProbabilityMapMap = new HashMap<>();
         while (entityIterator.hasNext()) {
@@ -305,10 +223,7 @@ public class NormalObserver implements Observer {
             DiscoveredEntity entity = entityIterator.next();
             if(entity.removeMark) {
                 entityIterator.remove();
-                continue;
             }
-            System.out.printf("%s, %d\t".formatted(entity.id, entity.lostCounter));
         }
-        System.out.println();
     }
 }

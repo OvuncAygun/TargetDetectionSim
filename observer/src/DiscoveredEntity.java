@@ -17,6 +17,7 @@ public class DiscoveredEntity {
     public int xProbability;
     public int yProbability;
     public HashMap<Point, Integer> probabilityMap = new HashMap<>();
+    public boolean matchable = true;
     public DiscoveredEntity matchedEntity = null;
 
     public DiscoveredEntity (int x, int y) {
@@ -79,12 +80,12 @@ public class DiscoveredEntity {
         return switch (Math.abs(xMovement) + Math.abs(yMovement)) {
             case 0 -> {
                 if (moveCounter == 0) {
-                    yield 10;
+                    yield 15;
                 }
                 else {
                     int scaled = Math.max(0,
                             Math.min(predictedMovementTiming, predictedMovementTiming - lastMovementCounter));
-                    yield 10 - Math.round((float) 10 * scaled / predictedMovementTiming);
+                    yield 15 - Math.round((float) 10 * scaled / predictedMovementTiming);
                 }
 
             }
