@@ -140,7 +140,7 @@ public class NormalObserver implements Observer {
 
     public void scan() throws IOException{
         outputStream.writeUTF("SCAN");
-        ArrayList<Integer> coordinateArray = new ArrayList<Integer>();
+        ArrayList<Integer> coordinateArray = new ArrayList<>();
         int coordinateCount = findCircleCoordinates(coordinateArray, scanRange);
         ByteBuffer outputByteBuffer = ByteBuffer.allocate(coordinateCount * (2 * Integer.BYTES));
         for (int coordinate : coordinateArray) {
