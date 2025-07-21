@@ -14,9 +14,18 @@ public class Main {
             int xSize = inputStream.readInt();
             int ySize = inputStream.readInt();
             Board board = new Board(xSize, ySize);
-            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-            observer = new NormalObserver(inputStream, outputStream, board, scheduler);
 
+            ThreadFactory threadFactory = new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable r) {
+                    return new Thread(r);
+                }
+            };
+            ExecutorService targetingService = Executors.newThreadPerTaskExecutor(threadFactory);
+
+            observer = new NormalObserver(inputStream, outputStream, board, targetingService);
+
+            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
             Runnable move = () -> {
                 try {

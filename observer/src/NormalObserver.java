@@ -4,13 +4,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class NormalObserver implements Observer {
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
     private final Board board;
-    private final ScheduledExecutorService scheduler;
+    private final ExecutorService targetingService;
     private final String id;
     private int x;
     private int y;
@@ -19,11 +20,12 @@ public class NormalObserver implements Observer {
     private final static int scanRange = 10;
     private final Deque<int[]> path = new ArrayDeque<>();
 
-    public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board, ScheduledExecutorService scheduler) throws IOException {
+    public NormalObserver(DataInputStream inputStream, DataOutputStream outputStream, Board board,
+                          ExecutorService targetingService) throws IOException {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.board = board;
-        this.scheduler = scheduler;
+        this.targetingService = targetingService;
         outputStream.writeUTF("observer");
         do {
             x = random.nextInt(0, board.xSize);
@@ -168,7 +170,7 @@ public class NormalObserver implements Observer {
                     outputStream.writeUTF(entity.id);
                     outputStream.writeInt(entity.x);
                     outputStream.writeInt(entity.y);
-
+                    targetEntity(entity);
                 }
                 else {
                     outputStream.writeUTF("MARK");
@@ -184,6 +186,10 @@ public class NormalObserver implements Observer {
                 outputStream.writeInt(entity.y);
             }
         }
+    }
+
+    private void targetEntity(DiscoveredEntity entity) {
+
     }
 
     private void identify() {
